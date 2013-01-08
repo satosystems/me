@@ -1,16 +1,45 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <assert.h>
 #include <curses.h>
+
+#define CTRL_X 0x18
+
+class Tracer {
+public:
+	Tracer() {
+		mFile = fopen("trace.log", "a");
+		assert(mFile);
+	}
+
+	~Tracer() {
+		fclose(mFile);
+	}
+
+	void d(const char *format, ...) {
+		va_list arg;
+		va_start(arg, format);
+		fprintf(mFile, "D: ");
+		vfprintf(mFile, format, arg);
+		fflush(mFile);
+		va_end(arg);
+	}
+
+private:
+	FILE *mFile;
+};
 
 static void loop() {
 	int ch;
 	int x = 0, y = 0;
+	Tracer tracer;
 
-	mvaddstr(0, 0, "Press Ctrl-c to exit.");
+	mvaddstr(0, 0, "Press Ctrl-x to exit.");
 	getyx(stdscr, y, x);
 
-	while (true) {
-		ch = getch();
+	while ((ch = getch()) != CTRL_X) {
+		tracer.d("ch:0x%x (%d)\n", ch, ch);
 		switch (ch) {
 		case KEY_LEFT:
 			x -= 1;

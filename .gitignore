@@ -1,4 +1,5 @@
 me
 me.exe
+*.log
 out/*.o
 
