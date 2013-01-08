@@ -7,6 +7,7 @@ static void loop() {
 	int x = 0, y = 0;
 
 	mvaddstr(0, 0, "Press Ctrl-c to exit.");
+	getyx(stdscr, y, x);
 
 	while (true) {
 		ch = getch();
