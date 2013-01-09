@@ -5,13 +5,17 @@
 #include <signal.h>
 #include <curses.h>
 
+#include <vector>
+
 #define CTRL_X 0x18
+#define KEY_ESC 0x1b
 
 static void setSignalHandler(int signame);
 static void signalHandler(int signame);
 class Tracer;
 
 Tracer *gTracer;
+std::vector<int> gKeyBuffer;
 
 class Tracer {
 public:
@@ -82,15 +86,28 @@ static void loop() {
 		switch (ch) {
 		case KEY_LEFT:
 			x -= 1;
+			gKeyBuffer.clear();
 			break;
 		case KEY_RIGHT:
 			x += 1;
+			gKeyBuffer.clear();
 			break;
 		case KEY_UP:
 			y -= 1;
+			gKeyBuffer.clear();
 			break;
 		case KEY_DOWN:
 			y += 1;
+			gKeyBuffer.clear();
+			break;
+		case KEY_ESC:
+			if (gKeyBuffer.size() == 1 && gKeyBuffer.back() == KEY_ESC) {
+				gKeyBuffer.clear();
+				mvaddstr(LINES - 1, 0, ":");
+				getyx(stdscr, y, x);
+			} else {
+				gKeyBuffer.push_back(ch);
+			}
 			break;
 		default:
 			break;
