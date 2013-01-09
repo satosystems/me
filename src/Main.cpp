@@ -2,9 +2,16 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <signal.h>
 #include <curses.h>
 
 #define CTRL_X 0x18
+
+static void setSignalHandler(int signame);
+static void signalHandler(int signame);
+class Tracer;
+
+Tracer *gTracer;
 
 class Tracer {
 public:
@@ -14,27 +21,59 @@ public:
 	}
 
 	~Tracer() {
+		gTracer = NULL;
 		fclose(mFile);
 	}
 
 	void d(const char *format, ...) {
 		va_list arg;
 		va_start(arg, format);
-		fprintf(mFile, "D: ");
-		vfprintf(mFile, format, arg);
-		fflush(mFile);
+		p("D: ", format, &arg);
+		va_end(arg);
+	}
+
+	void e(const char *format, ...) {
+		va_list arg;
+		va_start(arg, format);
+		p("E: ", format, &arg);
 		va_end(arg);
 	}
 
 private:
 	FILE *mFile;
+
+	void p(const char *tag, const char *format, va_list *arg) {
+		fprintf(mFile, "%s", tag);
+		vfprintf(mFile, format, *arg);
+		fflush(mFile);
+	}
 };
+
+static void setSignalHandler(int signame) {
+	if (signal(signame, signalHandler) == SIG_ERR) {
+		if (gTracer) {
+			gTracer->e("failed to set signal handler\n");
+		}
+		putchar(CTRL_X);
+	}
+}
+
+static void signalHandler(int signame) {
+	if (signame == SIGINT) {
+		if (gTracer) {
+			gTracer->d("signal:SIGINT (%d)\n", signame);
+		}
+		setSignalHandler(signame);
+	}
+}
 
 static void loop() {
 	int ch;
 	int x = 0, y = 0;
 	Tracer tracer;
 
+	gTracer = &tracer;
+	setSignalHandler(SIGINT);
 	mvaddstr(0, 0, "Press Ctrl-x to exit.");
 	getyx(stdscr, y, x);
 
