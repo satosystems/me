@@ -88,6 +88,82 @@ public:
 		erase(pos, pos + 1);
 	}
 
+	/*	
+	 * Adds an element to the end of the gap buffer.
+	 * The status of this object will change after calling this function.
+	 *
+	 * Case 1: mCapacity == mGapEnd
+	 *  push_back(x)
+	 *  [ ][ ][ ][ ][ ][ ][ ][ ][ ][ ]
+	 *   ^                             ^
+	 *   |                             |
+	 *   |                             + mGapEnd
+	 *   + mGapBegin
+	 *                  | 
+	 *                  v
+	 *  [x][ ][ ][ ][ ][ ][ ][ ][ ][ ]
+	 *      ^                          ^
+	 *      |                          |
+	 *      |                          + mGapEnd
+	 *      + mGapBegin
+	 *
+	 *  push_back(x)
+	 *  [a][ ][ ][ ][ ][ ][ ][ ][ ][ ]
+	 *      ^                          ^
+	 *      |                          |
+	 *      |                          + mGapEnd
+	 *      + mGapBegin
+	 *                  | 
+	 *                  v
+	 *  [a][x][ ][ ][ ][ ][ ][ ][ ][ ]
+	 *      ^                          ^
+	 *      |                          |
+	 *      |                          + mGapEnd
+	 *      + mGapBegin
+	 * In this case, new element is saved to mGapBegin.
+	 * 
+	 * Case 2: mCapacity != mGapEnd
+	 *  push_back(x)
+	 *  [a][ ][ ][ ][ ][ ][ ][ ][ ][b]
+	 *      ^                       ^
+ 	 *      |                       |
+ 	 *      |                       + mGapEnd
+ 	 *      + mGapBegin
+ 	 *                  | 
+ 	 *                  v
+ 	 *  [a][b][x][ ][ ][ ][ ][ ][ ][ ]
+ 	 *         ^                       ^
+ 	 *         |                       |
+ 	 *         |                       + mGapEnd
+ 	 *         + mGapBegin
+ 	 *
+ 	 *  push_back(x)
+ 	 *  [a][ ][ ][ ][ ][ ][b][c][d][e]
+ 	 *      ^              ^
+ 	 *      |              |
+ 	 *      |              + mGapEnd
+ 	 *      + mGapBegin
+ 	 *                  | 
+ 	 *                  v
+ 	 *  [a][b][c][d][e][x][ ][ ][ ][ ]
+ 	 *                     ^           ^
+ 	 *                     |           |
+ 	 *                     |           + mGapEnd
+ 	 *                     + mGapBegin
+	 * In this case, fast gap is moved to mBuffer tail,
+	 * after that it is same case 1.
+ 	 *
+	 * Case 3: mCapacity == mGapBegin or mGapBegin == mGapEnd
+ 	 *  push_back(x)
+ 	 *  [a][b][c][d][e][f][g][h][i][j]
+ 	 *                                 ^  
+ 	 *                                 |
+ 	 *                                 + mGapEnd
+ 	 *                                 + mGapBegin
+	 * In this case, there are no gap area in mBuffer,
+	 * so must to allocate new gap area at mBuffer tail.
+	 * After that, this is same case 1.
+	 */
 	void push_back(const T& val) {
 		if (mCapacity == mGapBegin) {
 			assert(mCapacity == mGapEnd);
@@ -117,6 +193,62 @@ private:
 	int mCapacity, mGapBegin, mGapEnd;
 	T *mBuffer;
 
+	/**
+	 * Move gap to specified position.
+	 *
+	 * Case 1: pos < mGapBegin
+	 *  [#][a][b][c][ ][ ][ ][ ][#][#]
+	 *      ^
+	 *      |
+	 *      + pos
+ 	 *                  | 
+ 	 *                  v
+	 *  [#][ ][ ][ ][ ][a][b][c][#][#]
+	 *
+	 *  [#][a][b][c][d][ ][ ][#][#][#]
+	 *      ^
+	 *      |
+	 *      + pos
+ 	 *                  | 
+ 	 *                  v
+	 *  [#][ ][ ][a][b][c][d][#][#][#]
+	 *
+	 *  [#][a][ ][ ][ ][#][#][#][#][#]
+	 *      ^
+	 *      |
+	 *      + pos
+ 	 *                  | 
+ 	 *                  v
+	 *  [#][ ][ ][ ][a][#][#][#][#][#]
+	 *
+	 * Case 2: pos > mGapBegin 
+	 *  [#][#][ ][ ][ ][a][b][c][d][#]
+	 *                     ^
+	 *                     |
+	 *                     + pos
+ 	 *                  | 
+ 	 *                  v
+	 *  [#][#][a][b][c][d][ ][ ][ ][#]
+	 *
+	 *  [#][#][#][#][ ][ ][a][b][#][#]
+	 *                     ^
+	 *                     |
+	 *                     + pos
+ 	 *                  | 
+ 	 *                  v
+	 *  [#][#][#][#][a][b][ ][ ][#][#]
+	 *
+	 *  [#][#][#][ ][ ][ ][ ][a][b][c]
+	 *                     ^
+	 *                     |
+	 *                     + pos
+ 	 *                  | 
+ 	 *                  v
+	 *  [#][#][#][a][b][c][ ][ ][ ][ ]
+	 *
+	 * Case 3: pos == mGapBegin 
+	 * In this case, does not need to move gap.
+	 */
 	void moveGap(int pos) {
 		if (mGapBegin == pos) {
 			return;
@@ -127,6 +259,7 @@ private:
 		}
 		int gapSize = mGapEnd - mGapBegin;
 		assert(gapSize >= 0);
+		assert(gapSize + pos <= mCapacity);
 		size_t len, size;
 		T *dest;
 		T *src = &mBuffer[pos];
