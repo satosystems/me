@@ -2,14 +2,14 @@
 
 #include "GapBuffer.h"
 
-TEST(GapBuffer, test_constructor_01) {
+TEST(GapBuffer, test_constructor_a_01) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	ASSERT_NE(0, gb.capacity());
 	ASSERT_LT(gb.size(), gb.capacity());
 }
 
-TEST(GapBuffer, test_constructor_02) {
+TEST(GapBuffer, test_constructor_b_01) {
 	const int growthSize = 4;
 	GapBuffer<int> gb(growthSize);
 	ASSERT_EQ(0, gb.size());
@@ -120,7 +120,7 @@ TEST(GapBuffer, test_clear_01) {
 	ASSERT_EQ(0, gb.size());
 }
 
-TEST(GapBuffer, test_insert_01) {
+TEST(GapBuffer, test_insert_a_01) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	int num = 200;
@@ -134,13 +134,13 @@ TEST(GapBuffer, test_insert_01) {
 	}
 }
 
-TEST(GapBuffer, test_insert_02) {
+TEST(GapBuffer, test_insert_a_02) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	int num = 200;
-	int rc = 0;
-	while (rc != num) {
-		rc = gb.insert(rc, rc);
+	int pos = 0;
+	while (pos != num) {
+		pos = gb.insert(pos, pos);
 	}
 	ASSERT_EQ(num, gb.size());
 	ASSERT_GT(gb.capacity(), gb.size());
@@ -149,7 +149,7 @@ TEST(GapBuffer, test_insert_02) {
 	}
 }
 
-TEST(GapBuffer, test_insert_03) {
+TEST(GapBuffer, test_insert_a_03) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	int num = 200;
@@ -163,7 +163,7 @@ TEST(GapBuffer, test_insert_03) {
 	}
 }
 
-TEST(GapBuffer, test_insert_04) {
+TEST(GapBuffer, test_insert_a_04) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	int num = 200;
@@ -176,7 +176,7 @@ TEST(GapBuffer, test_insert_04) {
 	}
 }
 
-TEST(GapBuffer, test_insert_06) {
+TEST(GapBuffer, test_insert_a_05) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	gb.insert(0, 100);
@@ -189,7 +189,7 @@ TEST(GapBuffer, test_insert_06) {
 }
 
 
-TEST(GapBuffer, test_insert_07) {
+TEST(GapBuffer, test_insert_b_01) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	int pos = 0;
@@ -200,7 +200,7 @@ TEST(GapBuffer, test_insert_07) {
 	ASSERT_EQ(val, gb[0]);
 }
 
-TEST(GapBuffer, test_insert_08) {
+TEST(GapBuffer, test_insert_b_02) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	int pos = 0;
@@ -213,7 +213,7 @@ TEST(GapBuffer, test_insert_08) {
 	}
 }
 
-TEST(GapBuffer, test_insert_09) {
+TEST(GapBuffer, test_insert_b_03) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	int pos = 0;
@@ -226,7 +226,7 @@ TEST(GapBuffer, test_insert_09) {
 	}
 }
 
-TEST(GapBuffer, test_insert_10) {
+TEST(GapBuffer, test_insert_b_04) {
 	const int growthSize = 1;
 	GapBuffer<int> gb(growthSize);
 	ASSERT_EQ(0, gb.size());
@@ -240,7 +240,7 @@ TEST(GapBuffer, test_insert_10) {
 	}
 }
 
-TEST(GapBuffer, test_insert_11) {
+TEST(GapBuffer, test_insert_b_05) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	gb.push_back(0);
@@ -257,7 +257,7 @@ TEST(GapBuffer, test_insert_11) {
 	ASSERT_EQ(1, gb[gb.size() - 1]);
 }
 
-TEST(GapBuffer, test_insert_12) {
+TEST(GapBuffer, test_insert_b_06) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	gb.push_back(0);
@@ -274,7 +274,28 @@ TEST(GapBuffer, test_insert_12) {
 	ASSERT_EQ(1, gb[gb.size() - 1]);
 }
 
-TEST(GapBuffer, test_insert_13) {
+TEST(GapBuffer, test_insert_b_07) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	int pos = 0;
+	int val1 = 123;
+	int val2 = 456;
+	int num = 200;
+	pos = gb.insert(pos, num, val1);
+	ASSERT_EQ(num, gb.size());
+	ASSERT_EQ(pos, gb.size());
+	pos = gb.insert(pos, num, val2);
+	ASSERT_EQ(num * 2, gb.size());
+	ASSERT_EQ(pos, gb.size());
+	for (int i = 0; i < num; i++) {
+		ASSERT_EQ(val1, gb[i]);
+	}
+	for (int i = num; i < gb.size(); i++) {
+		ASSERT_EQ(val2, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_insert_c_01) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	int num = 10;
@@ -290,7 +311,7 @@ TEST(GapBuffer, test_insert_13) {
 	}
 }
 
-TEST(GapBuffer, test_insert_14) {
+TEST(GapBuffer, test_insert_c_02) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	int num = 200;
@@ -306,7 +327,7 @@ TEST(GapBuffer, test_insert_14) {
 	}
 }
 
-TEST(GapBuffer, test_insert_15) {
+TEST(GapBuffer, test_insert_c_03) {
 	const int growthSize = 1;
 	GapBuffer<int> gb(growthSize);
 	ASSERT_EQ(0, gb.size());
@@ -323,7 +344,7 @@ TEST(GapBuffer, test_insert_15) {
 	}
 }
 
-TEST(GapBuffer, test_insert_16) {
+TEST(GapBuffer, test_insert_c_04) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	gb.push_back(-1);
@@ -341,6 +362,33 @@ TEST(GapBuffer, test_insert_16) {
 		ASSERT_EQ(i, gb[i]);
 	}
 	ASSERT_EQ(-2, gb[gb.size() - 1]);
+}
+
+TEST(GapBuffer, test_insert_c_05) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	int num = 200;
+	int pos = 0;
+	int array1[num];
+	for (int i = 0; i < num; i++) {
+		array1[i] = + i;
+	}
+	int array2[num];
+	for (int i = 0; i < num; i++) {
+		array2[i] = i + num;
+	}
+	pos = gb.insert(pos, array1, array1 + num);
+	ASSERT_EQ(num, gb.size());
+	ASSERT_EQ(pos, gb.size());
+	pos = gb.insert(pos, array2, array2 + num);
+	ASSERT_EQ(num * 2, gb.size());
+	ASSERT_EQ(pos, gb.size());
+	for (int i = 0; i < num; i++) {
+		ASSERT_EQ(i, gb[i]);
+	}
+	for (int i = num; i < gb.size(); i++) {
+		ASSERT_EQ(i, gb[i]);
+	}
 }
 
 

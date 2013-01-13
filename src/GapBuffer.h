@@ -37,11 +37,12 @@ public:
 	}
 
 	int insert(int pos, const T& val) {
-		insert(pos, 1, val);
-		return pos + 1;
+		assert(pos <= size());
+		return insert(pos, 1, val);
 	}
 
-	void insert(int pos, int num, const T& val) {
+	int insert(int pos, int num, const T& val) {
+		assert(pos <= size());
 		assert(num > 0);
 		moveGap(pos);
 		if (mGapEnd - mGapBegin < num) {
@@ -50,10 +51,13 @@ public:
 		for (int i = 0; i < num; i++) {
 			mBuffer[mGapBegin++] = val;
 		}
+		assert(pos + num == mGapBegin);
+		return mGapBegin;
 	}
 
 	template<class InputIterator>
-	void insert(int pos, InputIterator begin, InputIterator end) {
+	int insert(int pos, InputIterator begin, InputIterator end) {
+		assert(pos <= size());
 		int len = ((intptr_t)end - (intptr_t)begin) / sizeof(T);
 		assert(len > 0);
 
@@ -64,6 +68,8 @@ public:
 		while (begin != end) {
 			mBuffer[mGapBegin++] = *begin++;
 		}
+		assert(pos + len == mGapBegin);
+		return mGapBegin;
 	}
 
 	void erase(int begin, int end) {
