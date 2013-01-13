@@ -6,7 +6,7 @@ ifeq ($(OS),Windows_NT)
 INCLUDES += -I/usr/include/ncurses
 endif
 
-LIBS = -lncurses
+LIBS = -lncursesw
 
 OBJS = Main.o
 

@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <assert.h>
 #include <signal.h>
+#include <locale.h>
 #include <curses.h>
 
 #include <vector>
@@ -128,6 +129,7 @@ static void loop() {
 }
 
 int main(int argc, char *argv[]) {
+	setlocale(LC_ALL, "");
 	initscr();
 	cbreak();
 	noecho();
