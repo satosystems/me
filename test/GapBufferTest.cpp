@@ -129,7 +129,7 @@ TEST(GapBuffer, test_insert_01) {
 	}
 	ASSERT_EQ(num, gb.size());
 	ASSERT_GT(gb.capacity(), gb.size());
-	for (int i = 0; i < num; i++) {
+	for (int i = 0; i < gb.size(); i++) {
 		ASSERT_EQ(i, gb[i]);
 	}
 }
@@ -144,7 +144,7 @@ TEST(GapBuffer, test_insert_02) {
 	}
 	ASSERT_EQ(num, gb.size());
 	ASSERT_GT(gb.capacity(), gb.size());
-	for (int i = 0; i < num; i++) {
+	for (int i = 0; i < gb.size(); i++) {
 		ASSERT_EQ(i, gb[i]);
 	}
 }
@@ -158,7 +158,7 @@ TEST(GapBuffer, test_insert_03) {
 		gb.insert(pos, i);
 	}
 	ASSERT_EQ(num, gb.size());
-	for (int i = 0; i < num; i++) {
+	for (int i = 0; i < gb.size(); i++) {
 		ASSERT_EQ(num - i - 1, gb[i]);
 	}
 }
@@ -171,7 +171,7 @@ TEST(GapBuffer, test_insert_04) {
 		gb.insert(i, gb.size());
 	}
 	ASSERT_EQ(num, gb.size());
-	for (int i = 0; i < num; i++) {
+	for (int i = 0; i < gb.size(); i++) {
 		ASSERT_EQ(i, gb[i]);
 	}
 }
@@ -188,7 +188,109 @@ TEST(GapBuffer, test_insert_06) {
 	ASSERT_EQ(200, gb[2]);
 }
 
-TEST(GapBuffer, test_insert_xx) {
+
+TEST(GapBuffer, test_insert_07) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	int pos = 0;
+	int val = 123;
+	int num = 1;
+	gb.insert(pos, num, val);
+	ASSERT_EQ(num, gb.size());
+	ASSERT_EQ(val, gb[0]);
+}
+
+TEST(GapBuffer, test_insert_08) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	int pos = 0;
+	int val = 123;
+	int num = 10;
+	gb.insert(pos, num, val);
+	ASSERT_EQ(num, gb.size());
+	for (int i = 0; i < gb.size(); i++) {
+		ASSERT_EQ(val, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_insert_09) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	int pos = 0;
+	int val = 123;
+	int num = 200;
+	gb.insert(pos, num, val);
+	ASSERT_EQ(num, gb.size());
+	for (int i = 0; i < gb.size(); i++) {
+		ASSERT_EQ(val, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_insert_10) {
+	const int growthSize = 1;
+	GapBuffer<int> gb(growthSize);
+	ASSERT_EQ(0, gb.size());
+	int pos = 0;
+	int val = 123;
+	int num = 200;
+	gb.insert(pos, num, val);
+	ASSERT_EQ(num, gb.size());
+	for (int i = 0; i < gb.size(); i++) {
+		ASSERT_EQ(val, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_insert_11) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	gb.push_back(0);
+	gb.push_back(1);
+	int pos = 1;
+	int val = 123;
+	int num = 10;
+	gb.insert(pos, num, val);
+	ASSERT_EQ(num + 2, gb.size());
+	ASSERT_EQ(0, gb[0]);
+	for (int i = pos; i < num; i++) {
+		ASSERT_EQ(val, gb[i]);
+	}
+	ASSERT_EQ(1, gb[gb.size() - 1]);
+}
+
+TEST(GapBuffer, test_insert_12) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	gb.push_back(0);
+	gb.push_back(1);
+	int pos = 1;
+	int val = 123;
+	int num = 200;
+	gb.insert(pos, num, val);
+	ASSERT_EQ(num + 2, gb.size());
+	ASSERT_EQ(0, gb[0]);
+	for (int i = pos; i < num; i++) {
+		ASSERT_EQ(val, gb[i]);
+	}
+	ASSERT_EQ(1, gb[gb.size() - 1]);
+}
+
+TEST(GapBuffer, test_insert_13) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	int num = 10;
+	int pos = 0;
+	int array[num];
+	for (int i = 0; i < num; i++) {
+		array[i] = i;
+	}
+	gb.insert(pos, array, array + num);
+	ASSERT_EQ(num, gb.size());
+	for (int i = 0; i < gb.size(); i++) {
+		ASSERT_EQ(i, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_insert_14) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
 	int num = 200;
@@ -199,9 +301,46 @@ TEST(GapBuffer, test_insert_xx) {
 	}
 	gb.insert(pos, array, array + num);
 	ASSERT_EQ(num, gb.size());
-	for (int i = 0; i < num; i++) {
+	for (int i = 0; i < gb.size(); i++) {
 		ASSERT_EQ(i, gb[i]);
 	}
+}
+
+TEST(GapBuffer, test_insert_15) {
+	const int growthSize = 1;
+	GapBuffer<int> gb(growthSize);
+	ASSERT_EQ(0, gb.size());
+	int num = 200;
+	int pos = 0;
+	int array[num];
+	for (int i = 0; i < num; i++) {
+		array[i] = i;
+	}
+	gb.insert(pos, array, array + num);
+	ASSERT_EQ(num, gb.size());
+	for (int i = 0; i < gb.size(); i++) {
+		ASSERT_EQ(i, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_insert_16) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	gb.push_back(-1);
+	gb.push_back(-2);
+	int num = 200;
+	int pos = 1;
+	int array[num];
+	for (int i = 0; i < num; i++) {
+		array[i] = pos + i;
+	}
+	gb.insert(pos, array, array + num);
+	ASSERT_EQ(num + 2, gb.size());
+	ASSERT_EQ(-1, gb[0]);
+	for (int i = pos; i < num; i++) {
+		ASSERT_EQ(i, gb[i]);
+	}
+	ASSERT_EQ(-2, gb[gb.size() - 1]);
 }
 
 
