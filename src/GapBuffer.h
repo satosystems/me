@@ -88,7 +88,7 @@ public:
 		erase(pos, pos + 1);
 	}
 
-	/*	
+	/*
 	 * Adds an element to the end of the gap buffer.
 	 * The status of this object will change after calling this function.
 	 *
@@ -99,7 +99,7 @@ public:
 	 *   |                             |
 	 *   |                             + mGapEnd
 	 *   + mGapBegin
-	 *                  | 
+	 *                  |
 	 *                  v
 	 *  [x][ ][ ][ ][ ][ ][ ][ ][ ][ ]
 	 *      ^                          ^
@@ -113,7 +113,7 @@ public:
 	 *      |                          |
 	 *      |                          + mGapEnd
 	 *      + mGapBegin
-	 *                  | 
+	 *                  |
 	 *                  v
 	 *  [a][x][ ][ ][ ][ ][ ][ ][ ][ ]
 	 *      ^                          ^
@@ -121,45 +121,45 @@ public:
 	 *      |                          + mGapEnd
 	 *      + mGapBegin
 	 * In this case, new element is saved to mGapBegin.
-	 * 
+	 *
 	 * Case 2: mCapacity != mGapEnd
 	 *  push_back(x)
 	 *  [a][ ][ ][ ][ ][ ][ ][ ][ ][b]
 	 *      ^                       ^
- 	 *      |                       |
- 	 *      |                       + mGapEnd
- 	 *      + mGapBegin
- 	 *                  | 
- 	 *                  v
- 	 *  [a][b][x][ ][ ][ ][ ][ ][ ][ ]
- 	 *         ^                       ^
- 	 *         |                       |
- 	 *         |                       + mGapEnd
- 	 *         + mGapBegin
- 	 *
- 	 *  push_back(x)
- 	 *  [a][ ][ ][ ][ ][ ][b][c][d][e]
- 	 *      ^              ^
- 	 *      |              |
- 	 *      |              + mGapEnd
- 	 *      + mGapBegin
- 	 *                  | 
- 	 *                  v
- 	 *  [a][b][c][d][e][x][ ][ ][ ][ ]
- 	 *                     ^           ^
- 	 *                     |           |
- 	 *                     |           + mGapEnd
- 	 *                     + mGapBegin
+	 *      |                       |
+	 *      |                       + mGapEnd
+	 *      + mGapBegin
+	 *                  |
+	 *                  v
+	 *  [a][b][x][ ][ ][ ][ ][ ][ ][ ]
+	 *         ^                       ^
+	 *         |                       |
+	 *         |                       + mGapEnd
+	 *         + mGapBegin
+	 *
+	 *  push_back(x)
+	 *  [a][ ][ ][ ][ ][ ][b][c][d][e]
+	 *      ^              ^
+	 *      |              |
+	 *      |              + mGapEnd
+	 *      + mGapBegin
+	 *                  |
+	 *                  v
+	 *  [a][b][c][d][e][x][ ][ ][ ][ ]
+	 *                     ^           ^
+	 *                     |           |
+	 *                     |           + mGapEnd
+	 *                     + mGapBegin
 	 * In this case, fast gap is moved to mBuffer tail,
 	 * after that it is same case 1.
- 	 *
+	 *
 	 * Case 3: mCapacity == mGapBegin or mGapBegin == mGapEnd
- 	 *  push_back(x)
- 	 *  [a][b][c][d][e][f][g][h][i][j]
- 	 *                                 ^  
- 	 *                                 |
- 	 *                                 + mGapEnd
- 	 *                                 + mGapBegin
+	 *  push_back(x)
+	 *  [a][b][c][d][e][f][g][h][i][j]
+	 *                                 ^
+	 *                                 |
+	 *                                 + mGapEnd
+	 *                                 + mGapBegin
 	 * In this case, there are no gap area in mBuffer,
 	 * so must to allocate new gap area at mBuffer tail.
 	 * After that, this is same case 1.
@@ -201,52 +201,52 @@ private:
 	 *      ^
 	 *      |
 	 *      + pos
- 	 *                  | 
- 	 *                  v
+	 *                  |
+	 *                  v
 	 *  [#][ ][ ][ ][ ][a][b][c][#][#]
 	 *
 	 *  [#][a][b][c][d][ ][ ][#][#][#]
 	 *      ^
 	 *      |
 	 *      + pos
- 	 *                  | 
- 	 *                  v
+	 *                  |
+	 *                  v
 	 *  [#][ ][ ][a][b][c][d][#][#][#]
 	 *
 	 *  [#][a][ ][ ][ ][#][#][#][#][#]
 	 *      ^
 	 *      |
 	 *      + pos
- 	 *                  | 
- 	 *                  v
+	 *                  |
+	 *                  v
 	 *  [#][ ][ ][ ][a][#][#][#][#][#]
 	 *
-	 * Case 2: pos > mGapBegin 
+	 * Case 2: pos > mGapBegin
 	 *  [#][#][ ][ ][ ][a][b][c][d][#]
 	 *                     ^
 	 *                     |
 	 *                     + pos
- 	 *                  | 
- 	 *                  v
+	 *                  |
+	 *                  v
 	 *  [#][#][a][b][c][d][ ][ ][ ][#]
 	 *
 	 *  [#][#][#][#][ ][ ][a][b][#][#]
 	 *                     ^
 	 *                     |
 	 *                     + pos
- 	 *                  | 
- 	 *                  v
+	 *                  |
+	 *                  v
 	 *  [#][#][#][#][a][b][ ][ ][#][#]
 	 *
 	 *  [#][#][#][ ][ ][ ][ ][a][b][c]
 	 *                     ^
 	 *                     |
 	 *                     + pos
- 	 *                  | 
- 	 *                  v
+	 *                  |
+	 *                  v
 	 *  [#][#][#][a][b][c][ ][ ][ ][ ]
 	 *
-	 * Case 3: pos == mGapBegin 
+	 * Case 3: pos == mGapBegin
 	 * In this case, does not need to move gap.
 	 */
 	void moveGap(int pos) {
@@ -268,7 +268,7 @@ private:
 			len = mGapBegin - pos;
 			size = len * sizeof(T);
 			dest = &mBuffer[pos + gapSize];
-		} else /*if (pos > mGapBegin)*/ { // it commented out that mean silence compiler warning 
+		} else /*if (pos > mGapBegin)*/ { // it commented out that mean silence compiler warning
 			len = gapSize + (pos - mGapEnd);
 			size = len * sizeof(T);
 			dest = &mBuffer[pos - len];
@@ -287,7 +287,7 @@ private:
 		if (newBuffer == NULL) {
 			throw std::bad_alloc();
 		}
-		mBuffer = newBuffer;	
+		mBuffer = newBuffer;
 		int gapBeginBackup = mGapBegin;
 		int gapEndBackup = mGapEnd;
 		mGapBegin = mCapacity;
