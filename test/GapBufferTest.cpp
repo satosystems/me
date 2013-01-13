@@ -539,3 +539,95 @@ TEST(GapBuffer, test_erase_b_05) {
 	}
 }
 
+TEST(GapBuffer, test_operator_bracket_a_01) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	int num = 200;
+	for (int i = 0; i < num; i++) {
+		gb.push_back(i);
+		ASSERT_EQ(i + 1, gb.size());
+		ASSERT_EQ(i, gb[i]);
+	}
+	for (int i = 0; i < gb.size(); i++) {
+		ASSERT_EQ(i, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_operator_bracket_a_02) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	int num = 200;
+	for (int i = 0; i < num; i++) {
+		gb.insert(0, i);
+		ASSERT_EQ(i + 1, gb.size());
+		ASSERT_EQ(i, gb[0]);
+		ASSERT_EQ(0, gb[gb.size() - 1]);
+	}
+	for (int i = 0; i < gb.size(); i++) {
+		ASSERT_EQ(num - i - 1, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_operator_bracket_a_03) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	gb.push_back(3);
+	gb.push_back(4);
+	gb.push_back(5);
+	int array[3] = { 0, 1, 2 };
+	gb.insert(0, array, array + 3);
+	ASSERT_EQ(6, gb.size());
+	for (int i = 0; i < 6; i++) {
+		ASSERT_EQ(i, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_operator_bracket_b_01) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	int num = 200;
+	for (int i = 0; i < num; i++) {
+		gb.push_back(i);
+		ASSERT_EQ(i + 1, gb.size());
+		ASSERT_EQ(i, gb[i]);
+	}
+	int val = 456;
+	for (int i = 0; i < gb.size(); i++) {
+		gb[i] = val;
+		ASSERT_EQ(val, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_operator_bracket_b_02) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	int num = 200;
+	for (int i = 0; i < num; i++) {
+		gb.insert(0, i);
+		ASSERT_EQ(i + 1, gb.size());
+		ASSERT_EQ(i, gb[0]);
+		ASSERT_EQ(0, gb[gb.size() - 1]);
+	}
+	int val = 456;
+	for (int i = 0; i < gb.size(); i++) {
+		gb[i] = val;
+		ASSERT_EQ(val, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_operator_bracket_b_03) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	gb.push_back(3);
+	gb.push_back(4);
+	gb.push_back(5);
+	int array[3] = { 0, 1, 2 };
+	gb.insert(0, array, array + 3);
+	ASSERT_EQ(6, gb.size());
+	int val = 456;
+	for (int i = 0; i < 6; i++) {
+		gb[i] = val;
+		ASSERT_EQ(val, gb[i]);
+	}
+}
+
