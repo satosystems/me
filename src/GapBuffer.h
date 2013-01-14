@@ -188,6 +188,46 @@ public:
 		return mBuffer[(pos < mGapBegin) ? pos : pos + (mGapEnd - mGapBegin)];
 	}
 
+	const T* data() {
+		int gapSize = mGapEnd - mGapBegin;
+		if (mGapBegin == 0) {
+			return mBuffer + gapSize;
+		} else if (mGapEnd == mCapacity) {
+			return mBuffer;
+		}
+		moveGap(mCapacity - gapSize);
+		return mBuffer;
+	}
+
+#if 0
+// TODO: I don't know this method is usable or not.
+	/*
+	 * This function allocate memory and copy contents to allocated memory block.
+	 * You must delete [] when after using copy array.
+	 */
+	int copy(T **array) const {
+		int len = size();
+		if (len == 0) {
+			*array = NULL;
+			return 0;
+		}
+		*array = new T[len];
+		if (*array == NULL) {
+			throw std::bad_alloc();
+		}
+		int gapSize = mGapEnd - mGapBegin;
+		if (gapSize == 0) {
+			memcpy(*array, mBuffer, mCapacity * sizeof(T));
+		} else {
+			memcpy(*array, mBuffer, mGapBegin * sizeof(T));
+			if (mGapEnd != mCapacity) {
+				memcpy(*array + mGapBegin, mBuffer + mGapBegin + gapSize, (mCapacity - mGapEnd) * sizeof(T));
+			}
+		}
+		return len;
+	}
+#endif
+
 private:
 	const int GAP_GROWTH_SIZE;
 	int mCapacity, mGapBegin, mGapEnd;
@@ -261,18 +301,19 @@ private:
 		assert(gapSize >= 0);
 		assert(gapSize + pos <= mCapacity);
 		size_t len, size;
-		T *dest;
-		T *src = &mBuffer[pos];
+		T *src, *dest;
 
 		if (pos < mGapBegin) {
 			len = mGapBegin - pos;
 			size = len * sizeof(T);
-			dest = &mBuffer[pos + gapSize];
+			src = mBuffer + pos;
+			dest = mBuffer + pos + gapSize;
 		} else /*if (pos > mGapBegin)*/ { // it commented out that mean silence compiler warning
 			len = gapSize + (pos - mGapEnd);
 			size = len * sizeof(T);
-			dest = &mBuffer[pos - len];
-			assert(mBuffer + mCapacity >= dest + len);
+			src = mBuffer + mGapEnd;
+			dest = mBuffer + mGapBegin;
+			assert(mCapacity >= pos + gapSize);
 		}
 		memmove(dest, src, size);
 		mGapEnd = pos + gapSize;

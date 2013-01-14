@@ -582,6 +582,23 @@ TEST(GapBuffer, test_operator_bracket_a_03) {
 	}
 }
 
+TEST(GapBuffer, test_operator_bracket_a_04) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	gb.push_back(-1);
+	gb.push_back(0);
+	gb.push_back(1);
+	gb.push_back(2);
+	gb.push_back(3);
+	gb.push_back(4);
+	gb.push_back(5);
+	gb.erase(0);
+	ASSERT_EQ(6, gb.size());
+	for (int i = 0; i < gb.size(); i++) {
+		ASSERT_EQ(i, gb[i]);
+	}
+}
+
 TEST(GapBuffer, test_operator_bracket_b_01) {
 	GapBuffer<int> gb;
 	ASSERT_EQ(0, gb.size());
@@ -628,6 +645,74 @@ TEST(GapBuffer, test_operator_bracket_b_03) {
 	for (int i = 0; i < 6; i++) {
 		gb[i] = val;
 		ASSERT_EQ(val, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_operator_bracket_b_04) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	gb.push_back(-1);
+	gb.push_back(0);
+	gb.push_back(1);
+	gb.push_back(2);
+	gb.push_back(3);
+	gb.push_back(4);
+	gb.push_back(5);
+	gb.erase(0);
+	ASSERT_EQ(6, gb.size());
+	int val = 456;
+	for (int i = 0; i < gb.size(); i++) {
+		gb[i] = val;
+		ASSERT_EQ(val, gb[i]);
+	}
+}
+
+TEST(GapBuffer, test_data_01) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	gb.push_back(0);
+	gb.push_back(1);
+	gb.push_back(2);
+	gb.push_back(3);
+	gb.push_back(4);
+	gb.push_back(5);
+	ASSERT_EQ(6, gb.size());
+	const int *data = gb.data();
+	for (int i = 0; i < gb.size(); i++) {
+		ASSERT_EQ(i, data[i]);
+	}
+}
+
+TEST(GapBuffer, test_data_02) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	gb.push_back(-1);
+	gb.push_back(0);
+	gb.push_back(1);
+	gb.push_back(2);
+	gb.push_back(3);
+	gb.push_back(4);
+	gb.push_back(5);
+	gb.erase(0);
+	ASSERT_EQ(6, gb.size());
+	const int *data = gb.data();
+	for (int i = 0; i < gb.size(); i++) {
+		ASSERT_EQ(i, data[i]);
+	}
+}
+
+TEST(GapBuffer, test_data_03) {
+	GapBuffer<int> gb;
+	ASSERT_EQ(0, gb.size());
+	gb.push_back(3);
+	gb.push_back(4);
+	gb.push_back(5);
+	int array[3] = { 0, 1, 2 };
+	gb.insert(0, array, array + 3);
+	ASSERT_EQ(6, gb.size());
+	const int *data = gb.data();
+	for (int i = 0; i < gb.size(); i++) {
+		ASSERT_EQ(i, data[i]);
 	}
 }
 
