@@ -4,6 +4,24 @@
 #include <assert.h>
 #include <stdlib.h>
 
+/*
+ *   + head()
+ *   |                    + mGapBegin
+ *   |                    |                    + tail()
+ *   |                    |                    + mGapEnd
+ *   |                    |                    |
+ *   v                    v                    v
+ *  +--------------------+--------------------+--------------------+
+ *  |        head        |        gap         |        tail        |
+ *  +--------------------+--------------------+--------------------+
+ *
+ *   <--- head_size() -->|<--- gap_size() --->|<--- tail_size() -->
+ *
+ *   <-------------------|       size()       |------------------->
+ *
+ *   <------------------ mCapacity or capacity() ----------------->
+ */
+
 template<class T>
 class GapBuffer {
 public:
@@ -197,6 +215,26 @@ public:
 		}
 		moveGap(mCapacity - gapSize);
 		return mBuffer;
+	}
+
+	int head_size() const {
+		return mGapBegin;
+	}
+
+	int tail_size() const {
+		return mCapacity - mGapEnd;
+	}
+
+	int gap_size() const {
+		return mGapEnd - mGapBegin;
+	}
+
+	const T* head() const {
+		return mGapBegin == 0 ? NULL : mBuffer;
+	}
+
+	const T* tail() const {
+		return mGapEnd == mCapacity ? NULL : mBuffer + mGapEnd;
 	}
 
 #if 0
