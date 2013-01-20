@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdarg.h>
 #include <assert.h>
 #include <signal.h>
 #include <locale.h>
 #include <curses.h>
 
-#include <unicode/normlzr.h>
+#include <stdint.h>
+
+#include <unicode/normalizer2.h>
 #include <unicode/stringpiece.h>
 #include <unicode/unistr.h>
 
@@ -91,6 +94,45 @@ static void signalHandler(int signame) {
 	}
 }
 
+int me_addstr(const char * const utf8str) {
+	if (strlen(utf8str) == 1) {
+		addstr(utf8str);
+		return 1;
+	}
+	icu::UnicodeString src(utf8str, "utf-8");
+	UErrorCode errorCode;
+	errorCode = U_ZERO_ERROR;
+	const icu::Normalizer2 *n2 = icu::Normalizer2::getNFKCInstance(errorCode);
+	if (U_FAILURE(errorCode)) {
+		gTracer->w("%s\n", u_errorName(errorCode));
+		return -1;
+	}
+	errorCode = U_ZERO_ERROR;
+	icu::UnicodeString dest = n2->normalize(src, errorCode);
+	if (U_FAILURE(errorCode)) {
+		gTracer->w("%s\n", u_errorName(errorCode));
+		return -2;
+	}
+	std::string normalized;
+	dest.toUTF8String(normalized);
+	if (normalized.compare(utf8str) != 0) {
+		std::string hexOrg, hexNor;
+		for (size_t i = 0; i < strlen(utf8str); i++) {
+			char buf[16];
+			sprintf(buf, "%x", utf8str[i]);
+			hexOrg.append(buf);
+		}
+		for (size_t i = 0; i < normalized.size(); i++) {
+			char buf[16];
+			sprintf(buf, "%x", normalized[i]);
+			hexNor.append(buf);
+		}
+		gTracer->d("input:[%s] normalized[%s]\n", hexOrg.c_str(), hexNor.c_str());
+	}
+	addstr(normalized.c_str());
+	return normalized.size();
+}
+
 static void loop() {
 	int ch;
 	int x = 0, y = 0;
@@ -137,18 +179,18 @@ static void loop() {
 					mbcl = guessUtf8SequenceLength(ch);
 					tracer.d("mbcl:%d\n", mbcl);
 					if (mbcl == -1) {
-						tracer.w("Invalid UTF-8 sequence:%x", ch);
+						tracer.w("Invalid UTF-8 sequence:%x\n", ch);
 						continue;
 					}
 				}
 			}
 		}
 		if (mbcl > 0) {
-			assert(ch <= 0x7F);
+			assert(ch < 0xFE);
 			mbcbuf.push_back((char) ch);
 			mbcl--;
 			if (mbcl == 0) {
-				addstr(mbcbuf.c_str());
+				me_addstr(mbcbuf.c_str());
 				tracer.d("[%s]\n", mbcbuf.c_str());
 				int width = 1;
 				if (mbcbuf.size() > 1) {
