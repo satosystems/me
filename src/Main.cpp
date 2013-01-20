@@ -72,6 +72,7 @@ private:
 	void p(const char *tag, const char *format, va_list *arg) {
 		fprintf(mFile, "%s", tag);
 		vfprintf(mFile, format, *arg);
+		fprintf(mFile, "\n");
 		fflush(mFile);
 	}
 };
@@ -79,7 +80,7 @@ private:
 static void setSignalHandler(int signame) {
 	if (signal(signame, signalHandler) == SIG_ERR) {
 		if (gTracer) {
-			gTracer->e("failed to set signal handler\n");
+			gTracer->e("failed to set signal handler");
 		}
 		putchar(CTRL_X);
 	}
@@ -88,7 +89,7 @@ static void setSignalHandler(int signame) {
 static void signalHandler(int signame) {
 	if (signame == SIGINT) {
 		if (gTracer) {
-			gTracer->d("signal:SIGINT (%d)\n", signame);
+			gTracer->d("signal:SIGINT (%d)", signame);
 		}
 		setSignalHandler(signame);
 	}
@@ -104,13 +105,13 @@ int me_addstr(const char * const utf8str) {
 	errorCode = U_ZERO_ERROR;
 	const icu::Normalizer2 *n2 = icu::Normalizer2::getNFKCInstance(errorCode);
 	if (U_FAILURE(errorCode)) {
-		gTracer->w("%s\n", u_errorName(errorCode));
+		gTracer->w(u_errorName(errorCode));
 		return -1;
 	}
 	errorCode = U_ZERO_ERROR;
 	icu::UnicodeString dest = n2->normalize(src, errorCode);
 	if (U_FAILURE(errorCode)) {
-		gTracer->w("%s\n", u_errorName(errorCode));
+		gTracer->w(u_errorName(errorCode));
 		return -2;
 	}
 	std::string normalized;
@@ -127,7 +128,7 @@ int me_addstr(const char * const utf8str) {
 			sprintf(buf, "%x", normalized[i]);
 			hexNor.append(buf);
 		}
-		gTracer->d("input:[%s] normalized[%s]\n", hexOrg.c_str(), hexNor.c_str());
+		gTracer->d("input:[%s] normalized[%s]", hexOrg.c_str(), hexNor.c_str());
 	}
 	addstr(normalized.c_str());
 	return normalized.size();
@@ -146,7 +147,7 @@ static void loop() {
 	getyx(stdscr, y, x);
 
 	while ((ch = getch()) != CTRL_X) {
-		tracer.d("ch:0x%x (%d)\n", ch, ch);
+		tracer.d("ch:0x%x (%d)", ch, ch);
 		if (mbcl <= 0) {
 			switch (ch) {
 			case KEY_LEFT:
@@ -177,9 +178,9 @@ static void loop() {
 			default:
 				if (mbcl <= 0) {
 					mbcl = guessUtf8SequenceLength(ch);
-					tracer.d("mbcl:%d\n", mbcl);
+					tracer.d("mbcl:%d", mbcl);
 					if (mbcl == -1) {
-						tracer.w("Invalid UTF-8 sequence:%x\n", ch);
+						tracer.w("Invalid UTF-8 sequence:%x", ch);
 						continue;
 					}
 				}
@@ -191,14 +192,14 @@ static void loop() {
 			mbcl--;
 			if (mbcl == 0) {
 				me_addstr(mbcbuf.c_str());
-				tracer.d("[%s]\n", mbcbuf.c_str());
+				tracer.d("[%s]", mbcbuf.c_str());
 				int width = 1;
 				if (mbcbuf.size() > 1) {
 					icu::StringPiece sp(mbcbuf);
 					icu::UnicodeString us(icu::UnicodeString::fromUTF8(sp));
 					assert(1 == us.length());
 					width = wcwidth(us[0]);
-					tracer.d("width:%d\n", width);
+					tracer.d("width:%d", width);
 				}
 				x += width;
 				mbcbuf.clear();
