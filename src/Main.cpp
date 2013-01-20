@@ -6,7 +6,19 @@
 #include <locale.h>
 #include <curses.h>
 
+#include <unicode/normlzr.h>
+#include <unicode/stringpiece.h>
+#include <unicode/unistr.h>
+
+#include <string>
 #include <vector>
+
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE
+#endif
+#include <wchar.h>
+
+#include "Utf8Utils.h"
 
 #define CTRL_X 0x18
 #define KEY_ESC 0x1b
@@ -28,6 +40,13 @@ public:
 	~Tracer() {
 		gTracer = NULL;
 		fclose(mFile);
+	}
+
+	void w(const char *format, ...) {
+		va_list arg;
+		va_start(arg, format);
+		p("W: ", format, &arg);
+		va_end(arg);
 	}
 
 	void d(const char *format, ...) {
@@ -75,6 +94,8 @@ static void signalHandler(int signame) {
 static void loop() {
 	int ch;
 	int x = 0, y = 0;
+	std::string mbcbuf;
+	int mbcl = 0; // multi byte char length
 	Tracer tracer;
 
 	gTracer = &tracer;
@@ -84,34 +105,62 @@ static void loop() {
 
 	while ((ch = getch()) != CTRL_X) {
 		tracer.d("ch:0x%x (%d)\n", ch, ch);
-		switch (ch) {
-		case KEY_LEFT:
-			x -= 1;
-			gKeyBuffer.clear();
-			break;
-		case KEY_RIGHT:
-			x += 1;
-			gKeyBuffer.clear();
-			break;
-		case KEY_UP:
-			y -= 1;
-			gKeyBuffer.clear();
-			break;
-		case KEY_DOWN:
-			y += 1;
-			gKeyBuffer.clear();
-			break;
-		case KEY_ESC:
-			if (gKeyBuffer.size() == 1 && gKeyBuffer.back() == KEY_ESC) {
+		if (mbcl <= 0) {
+			switch (ch) {
+			case KEY_LEFT:
+				x -= 1;
 				gKeyBuffer.clear();
-				mvaddstr(LINES - 1, 0, ":");
-				getyx(stdscr, y, x);
-			} else {
-				gKeyBuffer.push_back(ch);
+				break;
+			case KEY_RIGHT:
+				x += 1;
+				gKeyBuffer.clear();
+				break;
+			case KEY_UP:
+				y -= 1;
+				gKeyBuffer.clear();
+				break;
+			case KEY_DOWN:
+				y += 1;
+				gKeyBuffer.clear();
+				break;
+			case KEY_ESC:
+				if (gKeyBuffer.size() == 1 && gKeyBuffer.back() == KEY_ESC) {
+					gKeyBuffer.clear();
+					mvaddstr(LINES - 1, 0, ":");
+					getyx(stdscr, y, x);
+				} else {
+					gKeyBuffer.push_back(ch);
+				}
+				break;
+			default:
+				if (mbcl <= 0) {
+					mbcl = guessUtf8SequenceLength(ch);
+					tracer.d("mbcl:%d\n", mbcl);
+					if (mbcl == -1) {
+						tracer.w("Invalid UTF-8 sequence:%x", ch);
+						continue;
+					}
+				}
 			}
-			break;
-		default:
-			break;
+		}
+		if (mbcl > 0) {
+			assert(ch <= 0x7F);
+			mbcbuf.push_back((char) ch);
+			mbcl--;
+			if (mbcl == 0) {
+				addstr(mbcbuf.c_str());
+				tracer.d("[%s]\n", mbcbuf.c_str());
+				int width = 1;
+				if (mbcbuf.size() > 1) {
+					icu::StringPiece sp(mbcbuf);
+					icu::UnicodeString us(icu::UnicodeString::fromUTF8(sp));
+					assert(1 == us.length());
+					width = wcwidth(us[0]);
+					tracer.d("width:%d\n", width);
+				}
+				x += width;
+				mbcbuf.clear();
+			}
 		}
 
 		if (x <= 0) {

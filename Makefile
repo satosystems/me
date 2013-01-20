@@ -1,12 +1,43 @@
 VPATH = src test/gtest
 
+# How to detect OS type.
+# Windows:
+#  ifeq ($(OS),Windows_NT)
+#  ...
+#  endif
+# Mac:
+#  ifef (${shell uname},Darwin)
+#  ...
+#  endif
+# Linux:
+#  ifeq (${shell uname},Linux)
+#  ...
+#  endif
+# FreeBSD:
+#  ifeq ($(OS),FreeBSD)
+#  ...
+#  endif
+UNAME = ${shell uname}
+
 INCLUDES = -Isrc
 
 ifeq ($(OS),Windows_NT)
 INCLUDES += -I/usr/include/ncurses
 endif
 
-LIBS = -lncursesw
+LIBS = -L/usr/local/lib -lboost_system -lboost_filesystem
+
+ifeq ($(UNAME),Darwin)
+LIBS += -lncurses
+else
+LIBS += -lncursesw
+endif
+
+ifeq ($(OS),Windows_NT)
+LIBS += `pkg-config --libs --cflags icu-uc icu-io`
+else
+LIBS += -licuuc -licuio
+endif
 
 OBJS = Main.o
 
