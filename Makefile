@@ -25,7 +25,7 @@ ifeq ($(OS),Windows_NT)
 INCLUDES += -I/usr/include/ncurses
 endif
 
-LIBS = -L/usr/local/lib -lboost_system -lboost_filesystem
+LIBS = -L/usr/local/lib -lboost_system -lboost_filesystem -lboost_regex
 
 ifeq ($(UNAME),Darwin)
 LIBS += -lncurses
@@ -39,7 +39,7 @@ else
 LIBS += -licuuc -licuio
 endif
 
-OBJS = Main.o Exception.o
+OBJS = Main.o Exception.o File.o
 
 GTEST_OBJS = out/test/gtest-all.o out/test/gtest_main.o
 

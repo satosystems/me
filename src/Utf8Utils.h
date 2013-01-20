@@ -1,6 +1,8 @@
 #ifndef _7e9a89b0_c03a_4fd3_abcf_d9901b9b1b22_
 #define _7e9a89b0_c03a_4fd3_abcf_d9901b9b1b22_
 
+#include <unicode/normalizer2.h>
+
 #include "Exception.h"
 
 /*
@@ -49,16 +51,16 @@ inline int guessUtf8SequenceLength(const int byte1) {
 #define range(start, end) (byte1 >= 0x##start && byte1 <= 0x##end)
 #define eq(expected) (byte1 == 0x##expected)
 #define le(expected) (byte1 <= 0x##expected)
-    if (le(7F)) {
-        return 1;
-    } else if (range(C2, DF)) {
-        return 2;
-    } else if (eq(E0) || range(E1, EC) || eq(ED) || range(EE, EF)) {
-        return 3;
-    } else if (eq(F0) || range(F1, F3) || eq(F4)) {
-        return 4;
-    }
-    return -1;
+	if (le(7F)) {
+		return 1;
+	} else if (range(C2, DF)) {
+		return 2;
+	} else if (eq(E0) || range(E1, EC) || eq(ED) || range(EE, EF)) {
+		return 3;
+	} else if (eq(F0) || range(F1, F3) || eq(F4)) {
+		return 4;
+	}
+	return -1;
 #undef range
 #undef eq
 #undef le
