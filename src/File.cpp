@@ -74,24 +74,50 @@ File::File(const char *fileName) :
 				const char *encodingName = mFileEncodingCandidate[0].name;
 				char *nextLineBegin;
 				char *lineEnd;
-				Line::LineFeedCode lfcDefault = Line::LineFeedCodeDefault;
+				mFileLineFeed = Line::LineFeedCodeDefault;
 				while (lineBegin != NULL) {
 					Line::LineFeedCode lfc =
 						Line::searchLineFeedCode(lineBegin, fileEnd, encodingName, &lineEnd, &nextLineBegin);
-					if (lfcDefault == Line::LineFeedCodeDefault) {
-						lfcDefault = lfc;
+					if (mFileLineFeed == Line::LineFeedCodeDefault) {
+						mFileLineFeed = lfc;
 					}
-					std::string normalized = toUtf8(lineBegin, lineEnd, encodingName);
 					Line *line;
-					if (lfc == lfcDefault) {
-						line = new Line(normalized);
+					if (lineBegin == lineEnd && lfc == mFileLineFeed) {
+						line = Line::blankLine();
 					} else {
-						line = new Line(normalized, lfc);
+						std::string normalized = toUtf8(lineBegin, lineEnd, encodingName);
+						if (lfc == mFileLineFeed) {
+							line = new Line(normalized);
+						} else {
+							line = new Line(normalized, lfc);
+						}
 					}
 					mLines.push_back(line);
 					lineBegin = nextLineBegin;
 				}
+				if (mFileLineFeed == Line::LineFeedCodeDefault) {
+					// TODO: this file have no line feed
+				}
 			}
+		}
+	}
+}
+
+File::~File() {
+	int headSize = mLines.head_size();
+	Line * const *head = mLines.head();
+	for (int i = 0; i < headSize; i++) {
+		const Line *line = head[i];
+		if (line != Line::blankLine()) {
+			delete line;
+		}
+	}
+	int tailSize = mLines.tail_size();
+	Line * const *tail = mLines.tail();
+	for (int i = 0; i < tailSize; i++) {
+		const Line *line = tail[i];
+		if (line != Line::blankLine()) {
+			delete line;
 		}
 	}
 }

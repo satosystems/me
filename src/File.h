@@ -16,6 +16,7 @@ public:
 	};
 	File();
 	File(const char * const fileName);
+	~File();
 
 private:
 	std::string mFileName;

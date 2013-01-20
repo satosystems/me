@@ -22,7 +22,8 @@ public:
 	}
 
 	static Line *blankLine() {
-		return &mBlankLine;
+		static Line line;
+		return &line;
 	}
 
 	static LineFeedCode searchLineFeedCode(const char *lineBegin, const char *fileEnd, const char *encodingName,
@@ -63,8 +64,6 @@ private:
 	 */
 	Line() : mLineData(1), mLineFeedCode(LineFeedCodeDefault) {
 	}
-
-	static Line mBlankLine;
 };
 
 #endif
