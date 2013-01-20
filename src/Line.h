@@ -7,16 +7,16 @@
 
 class Line {
 public:
-	enum LineFeedCode {
-		LineFeedCodeDefault = -1,
-		LineFeedCodeNone = 0,
-		LineFeedCodeCR = 1,
-		LineFeedCodeLF = 2,
-		LineFeedCodeCRLF = 3,
+	enum LineFeed {
+		LineFeedDefault = -1,
+		LineFeedNone = 0,
+		LineFeedCR = 1,
+		LineFeedLF = 2,
+		LineFeedCRLF = 3,
 	};
 
-	Line(std::string& str, LineFeedCode lineFeedCode = LineFeedCodeDefault) :
-			mLineFeedCode(lineFeedCode) {
+	Line(std::string& str, LineFeed lineFeedCode = LineFeedDefault) :
+			mLineFeed(lineFeedCode) {
 		const char *data = str.data();
 		mLineData.insert(0, data, data + str.size());
 	}
@@ -26,7 +26,7 @@ public:
 		return &line;
 	}
 
-	static LineFeedCode searchLineFeedCode(const char *lineBegin, const char *fileEnd, const char *encodingName,
+	static LineFeed searchLineFeed(const char *lineBegin, const char *fileEnd, const char *encodingName,
 			char **lineEnd, char **nextLineBegin) {
 		*nextLineBegin = NULL;
 		*lineEnd = NULL;
@@ -43,26 +43,26 @@ public:
 				if ((*lineEnd)[0] == '\r') {
 					if (fileEnd > lineBegin + pos && lineBegin[pos + 1] == '\n') {
 						(*nextLineBegin)++;
-						return LineFeedCodeCRLF;
+						return LineFeedCRLF;
 					}
-					return LineFeedCodeCR;
+					return LineFeedCR;
 				}
-				return LineFeedCodeLF;
+				return LineFeedLF;
 			} else {
 				*lineEnd = const_cast<char *>(fileEnd);
 			}
 		}
-		return LineFeedCodeNone;
+		return LineFeedNone;
 	}
 
 private:
 	GapBuffer<char> mLineData;
-	LineFeedCode mLineFeedCode;
+	LineFeed mLineFeed;
 
 	/*
 	 * Constructor for blankLine.
 	 */
-	Line() : mLineData(1), mLineFeedCode(LineFeedCodeDefault) {
+	Line() : mLineData(1), mLineFeed(LineFeedDefault) {
 	}
 };
 

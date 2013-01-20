@@ -21,7 +21,7 @@ public:
 private:
 	std::string mFileName;
 	boost::uintmax_t mFileSize;
-	Line::LineFeedCode mFileLineFeed;
+	Line::LineFeed mFileLineFeed;
 	GapBuffer<Line *> mLines;
 	/*
 	 * Candidate charactor encoding of this file.

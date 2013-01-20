@@ -74,28 +74,28 @@ File::File(const char *fileName) :
 				const char *encodingName = mFileEncodingCandidate[0].name;
 				char *nextLineBegin;
 				char *lineEnd;
-				mFileLineFeed = Line::LineFeedCodeDefault;
+				mFileLineFeed = Line::LineFeedDefault;
 				while (lineBegin != NULL) {
-					Line::LineFeedCode lfc =
-						Line::searchLineFeedCode(lineBegin, fileEnd, encodingName, &lineEnd, &nextLineBegin);
-					if (mFileLineFeed == Line::LineFeedCodeDefault) {
-						mFileLineFeed = lfc;
+					Line::LineFeed lf =
+						Line::searchLineFeed(lineBegin, fileEnd, encodingName, &lineEnd, &nextLineBegin);
+					if (mFileLineFeed == Line::LineFeedDefault) {
+						mFileLineFeed = lf;
 					}
 					Line *line;
-					if (lineBegin == lineEnd && lfc == mFileLineFeed) {
+					if (lineBegin == lineEnd && lf == mFileLineFeed) {
 						line = Line::blankLine();
 					} else {
 						std::string normalized = toUtf8(lineBegin, lineEnd, encodingName);
-						if (lfc == mFileLineFeed) {
+						if (lf == mFileLineFeed) {
 							line = new Line(normalized);
 						} else {
-							line = new Line(normalized, lfc);
+							line = new Line(normalized, lf);
 						}
 					}
 					mLines.push_back(line);
 					lineBegin = nextLineBegin;
 				}
-				if (mFileLineFeed == Line::LineFeedCodeDefault) {
+				if (mFileLineFeed == Line::LineFeedDefault) {
 					// TODO: this file have no line feed
 				}
 			}
