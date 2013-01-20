@@ -120,12 +120,12 @@ int me_addstr(const char * const utf8str) {
 		std::string hexOrg, hexNor;
 		for (size_t i = 0; i < strlen(utf8str); i++) {
 			char buf[16];
-			sprintf(buf, "%x", utf8str[i]);
+			sprintf(buf, "%02X", utf8str[i] & 0xFF);
 			hexOrg.append(buf);
 		}
 		for (size_t i = 0; i < normalized.size(); i++) {
 			char buf[16];
-			sprintf(buf, "%x", normalized[i]);
+			sprintf(buf, "%02X", normalized[i] & 0xFF);
 			hexNor.append(buf);
 		}
 		gTracer->d("input:[%s] normalized[%s]", hexOrg.c_str(), hexNor.c_str());
