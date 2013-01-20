@@ -1,6 +1,8 @@
 #ifndef _7e9a89b0_c03a_4fd3_abcf_d9901b9b1b22_
 #define _7e9a89b0_c03a_4fd3_abcf_d9901b9b1b22_
 
+#include "Exception.h"
+
 /*
  * This header file provides useful functions for handling UTF-8 string.
  *
@@ -60,6 +62,24 @@ inline int guessUtf8SequenceLength(const int byte1) {
 #undef range
 #undef eq
 #undef le
+}
+
+inline std::string toUtf8(const char *begin, const char *end, const char *encodingName) {
+	icu::UnicodeString src(begin, end - begin, encodingName);
+	UErrorCode errorCode;
+	errorCode = U_ZERO_ERROR;
+	const icu::Normalizer2 *n2 = icu::Normalizer2::getNFKCInstance(errorCode);
+	if (U_FAILURE(errorCode)) {
+		throw me::encoding_error(u_errorName(errorCode));
+	}
+	errorCode = U_ZERO_ERROR;
+	icu::UnicodeString dest = n2->normalize(src, errorCode);
+	if (U_FAILURE(errorCode)) {
+		throw me::encoding_error(u_errorName(errorCode));
+	}
+	std::string normalized;
+	dest.toUTF8String(normalized);
+	return normalized;
 }
 
 #endif

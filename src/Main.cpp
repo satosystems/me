@@ -96,26 +96,12 @@ static void signalHandler(int signame) {
 }
 
 int me_addstr(const char * const utf8str) {
-	if (strlen(utf8str) == 1) {
+	size_t len = strlen(utf8str);
+	if (len == 1) {
 		addstr(utf8str);
 		return 1;
 	}
-	icu::UnicodeString src(utf8str, "utf-8");
-	UErrorCode errorCode;
-	errorCode = U_ZERO_ERROR;
-	const icu::Normalizer2 *n2 = icu::Normalizer2::getNFKCInstance(errorCode);
-	if (U_FAILURE(errorCode)) {
-		gTracer->w(u_errorName(errorCode));
-		return -1;
-	}
-	errorCode = U_ZERO_ERROR;
-	icu::UnicodeString dest = n2->normalize(src, errorCode);
-	if (U_FAILURE(errorCode)) {
-		gTracer->w(u_errorName(errorCode));
-		return -2;
-	}
-	std::string normalized;
-	dest.toUTF8String(normalized);
+	std::string normalized = toUtf8(utf8str, utf8str + len, "UTF-8");
 	if (normalized.compare(utf8str) != 0) {
 		std::string hexOrg, hexNor;
 		for (size_t i = 0; i < strlen(utf8str); i++) {
