@@ -7,6 +7,7 @@
 #include <boost/interprocess/file_mapping.hpp>
 
 #include "Line.h"
+#include "Utf8Utils.h"
 
 class File {
 	friend class Line;
@@ -70,7 +71,7 @@ private:
 	 * Candidate charactor encoding of this file.
 	 */
 	std::vector<Encoding> mFileEncodingCandidate;
-	bool mWithBOM;
+	Bom mBom;
 	Iterator *mIteratorBegin;
 	Iterator *mIteratorEnd;
 };

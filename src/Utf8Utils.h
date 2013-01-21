@@ -39,6 +39,13 @@
  * - RFC-3629: UTF-8, a transformation format of ISO 10646
  */
 
+enum Bom {
+	BomBE,
+	BomLE,
+	BomZWNBSP,
+	BomNone,
+};
+
 inline int getUtf8CodePointLength(const int c) {
 	if (c < 0x80) return 1;
 	if (c < 0x800) return 2;
