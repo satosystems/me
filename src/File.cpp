@@ -8,20 +8,25 @@
 #include "File.h"
 #include "Utf8Utils.h"
 
+static char gUtf16BE[] = "UTF-16BE";
+static char gUtf16LE[] = "UTF-16LE";
+static char gUtf32BE[] = "UTF-32BE";
+static char gUtf32LE[] = "UTF-32LE";
+
 File::File() :
 		mFileSize(static_cast<boost::uintmax_t>(-1)),
+		mBom(BomNone),
 		mIteratorBegin(NULL),
-		mIteratorEnd(NULL),
-		mBom(BomNone) {
+		mIteratorEnd(NULL) {
 	// TODO: read default encoding and line feed from properties file.
 }
 
 File::File(const char *fileName) :
 		mFileName(fileName),
 		mFileSize(static_cast<boost::uintmax_t>(-1)),
+		mBom(BomNone),
 		mIteratorBegin(NULL),
-		mIteratorEnd(NULL),
-		mBom(BomNone) {
+		mIteratorEnd(NULL) {
 	namespace bfs = boost::filesystem;
 	namespace bip = boost::interprocess;
 
@@ -62,7 +67,7 @@ File::File(const char *fileName) :
 				for (int i = 0; i < matchesFound; i++) {
 					Encoding encoding;
 					errorCode = U_ZERO_ERROR;
-					encoding.name = ucsdet_getName(ucsm[i], &errorCode);
+					encoding.name = const_cast<char *>(ucsdet_getName(ucsm[i], &errorCode));
 					if (U_FAILURE(errorCode)) {
 						// TODO:
 					}
@@ -90,15 +95,15 @@ File::File(const char *fileName) :
 						assert(strcmp(encodingName, "UTF-16LE") == 0);
 						lineBegin += 2;
 					} else {
-						for (int i = 0; i < fileSize; i += 2) {
+						for (boost::uintmax_t i = 0; i < fileSize; i += 2) {
 							if (lineBegin[i] == 0x00 && lineBegin[i + 1] != 0x00) {
 								mBom = BomBE;
-								*encodingRename = "UTF-16BE";
+								*encodingRename = gUtf16BE;
 								break;
 							}
 							if (lineBegin[i] != 0x00 && lineBegin[i + 1] == 0x00) {
 								mBom = BomLE;
-								*encodingRename = "UTF-16LE";
+								*encodingRename = gUtf16LE;
 								break;
 							}
 						}
@@ -121,17 +126,17 @@ File::File(const char *fileName) :
 						assert(strcmp(encodingName, "UTF-32LE") == 0);
 						lineBegin += 4;
 					} else {
-						for (int i = 0; i < fileSize; i += 4) {
+						for (boost::uintmax_t i = 0; i < fileSize; i += 4) {
 							if (lineBegin[i] == 0x00 && lineBegin[i + 1] == 0x00 &&
 									lineBegin[i + 2] != 0x00 && lineBegin[i + 3] != 0x00) {
 								mBom = BomBE;
-								*encodingRename = "UTF-32BE";
+								*encodingRename = gUtf32BE;
 								break;
 							}
 							if (lineBegin[i] != 0x00 && lineBegin[i + 1] != 0x00 &&
 									lineBegin[i + 2] == 0x00 && lineBegin[i + 3] == 0x00) {
 								mBom = BomLE;
-								*encodingRename = "UTF-32LE";
+								*encodingRename = gUtf32LE;
 								break;
 							}
 						}
@@ -139,10 +144,10 @@ File::File(const char *fileName) :
 				}
 
 				const char *fileEnd = ptr + size;
-				char *nextLineBegin;
-				char *lineEnd;
 				mFileLineFeed = Line::LineFeedDefault;
 				while (lineBegin != NULL) {
+					char *nextLineBegin = NULL;
+					char *lineEnd = NULL;
 					Line::LineFeed lf =
 						Line::searchLineFeed(lineBegin, fileEnd, encodingName, &lineEnd, &nextLineBegin);
 					if (mFileLineFeed == Line::LineFeedDefault) {

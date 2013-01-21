@@ -1,6 +1,8 @@
 #ifndef _f6bb38f6_3f7c_4911_8dfe_f2333430c212_
 #define _f6bb38f6_3f7c_4911_8dfe_f2333430c212_
 
+#include <string.h>
+
 #include <string>
 
 #include "GapBuffer.h"
@@ -35,7 +37,7 @@ public:
 	static LineFeed searchLineFeed(const char *lineBegin, const char *fileEnd, const char *encodingName,
 			char **lineEnd, char **nextLineBegin) {
 		if (strstr(encodingName, "UTF-16BE") == encodingName) {
-			for (char *cp = lineBegin; cp < fileEnd ; cp += 2) {
+			for (char *cp = const_cast<char *>(lineBegin); cp < fileEnd ; cp += 2) {
 				if (cp[0] == 0x00 && cp[1] == '\r') {
 					*lineEnd = cp;
 					*nextLineBegin = *lineEnd + 2;
@@ -53,7 +55,7 @@ public:
 			}
 			*lineEnd = const_cast<char *>(fileEnd);
 		} else if (strstr(encodingName, "UTF-16LE") == encodingName) {
-			for (char *cp = lineBegin; cp < fileEnd ; cp += 2) {
+			for (char *cp = const_cast<char *>(lineBegin); cp < fileEnd ; cp += 2) {
 				if (cp[0] == 'r' && cp[1] == 0x00) {
 					*lineEnd = cp;
 					*nextLineBegin = *lineEnd + 2;
@@ -71,7 +73,7 @@ public:
 			}
 			*lineEnd = const_cast<char *>(fileEnd);
 		} else if (strstr(encodingName, "UTF-32BE") == encodingName) {
-			for (char *cp = lineBegin; cp < fileEnd ; cp += 4) {
+			for (char *cp = const_cast<char *>(lineBegin); cp < fileEnd ; cp += 4) {
 				if (cp[0] == 0x00 && cp[1] == 0x00 && cp[2] == 0x00 && cp[3] == '\r') {
 					*lineEnd = cp;
 					*nextLineBegin = *lineEnd + 4;
@@ -90,7 +92,7 @@ public:
 			}
 			*lineEnd = const_cast<char *>(fileEnd);
 		} else if (strstr(encodingName, "UTF-32LE") == encodingName) {
-			for (char *cp = lineBegin; cp < fileEnd ; cp += 4) {
+			for (char *cp = const_cast<char *>(lineBegin); cp < fileEnd ; cp += 4) {
 				if (cp[0] == '\r' && cp[1] == 0x00 && cp[2] == 0x00 && cp[3] == 0x00) {
 					*lineEnd = cp;
 					*nextLineBegin = *lineEnd + 4;
@@ -111,7 +113,7 @@ public:
 		} else {
 			for (int i = 0; lineBegin < fileEnd ; i++) {
 				if (lineBegin[i] == 0x00 && lineBegin[i + 1] == '\r') {
-					*lineEnd = lineBegin + i;
+					*lineEnd = const_cast<char *>(lineBegin) + i;
 					*nextLineBegin = *lineEnd + 2;
 					if (lineBegin + i + 4 < fileEnd && lineBegin[i + 2] == 0x00 && lineBegin[i + 3] == '\n') {
 						*nextLineBegin += 2;
@@ -120,7 +122,7 @@ public:
 					return LineFeedCR;
 				}
 				if (lineBegin[i] == 0x00 && lineBegin[i + 1] == '\n') {
-					*lineEnd = lineBegin + i;
+					*lineEnd = const_cast<char *>(lineBegin) + i;
 					*nextLineBegin = *lineEnd + 2;
 					return LineFeedLF;
 				}

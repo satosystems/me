@@ -13,7 +13,7 @@ class File {
 	friend class Line;
 public:
 	struct Encoding {
-		const char *name;
+		char *name;
 		int32_t confidence;
 	};
 	class Iterator {

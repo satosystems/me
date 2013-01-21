@@ -36,7 +36,7 @@ endif
 ifeq ($(OS),Windows_NT)
 LIBS += `pkg-config --libs --cflags icu-uc icu-io`
 else
-LIBS += -licuuc -licuio
+LIBS += -licui18n -licuuc -licuio
 endif
 
 OBJS = Main.o Exception.o File.o Line.o
