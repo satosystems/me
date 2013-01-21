@@ -35,7 +35,7 @@ public:
 		}
 	}
 
-	~GapBuffer() {
+	virtual ~GapBuffer() {
 		free(mBuffer);
 	}
 
@@ -196,12 +196,12 @@ public:
 		}
 	}
 
-	T& operator[](int pos) {
+	T& operator [](int pos) {
 		assert(pos >= 0 && pos < size());
 		return mBuffer[(pos < mGapBegin) ? pos : pos + (mGapEnd - mGapBegin)];
 	}
 
-	const T& operator[](int pos) const {
+	const T& operator [](int pos) const {
 		assert(pos >= 0 && pos < size());
 		return mBuffer[(pos < mGapBegin) ? pos : pos + (mGapEnd - mGapBegin)];
 	}
@@ -239,6 +239,18 @@ public:
 
 #if 0
 // TODO: I don't know this method is usable or not.
+	GapBuffer<T>& operator =(const GapBuffer<T>& that) {
+		mCapacity = that.mCapacity;
+		mGapBegin = that.mGapBegin;
+		mGapEnd = that.mGapEnd;
+		mBuffer = (T *) malloc(mCapacity * sizeof(T));
+		memcpy(mBuffer, that.mBuffer, mCapacity * sizeof(T));
+		return *this;
+	}
+#endif
+
+#if 0
+// TODO: I don't know this method is usable or not.
 	/*
 	 * This function allocate memory and copy contents to allocated memory block.
 	 * You must delete [] when after using copy array.
@@ -266,7 +278,7 @@ public:
 	}
 #endif
 
-private:
+protected:
 	const int GAP_GROWTH_SIZE;
 	int mCapacity, mGapBegin, mGapEnd;
 	T *mBuffer;

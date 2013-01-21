@@ -1,7 +1,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
-#include <boost/regex.hpp>
 
 #include <unicode/unistr.h>
 #include <unicode/ucsdet.h>
@@ -10,12 +9,16 @@
 #include "Utf8Utils.h"
 
 File::File() :
-		mFileSize(static_cast<boost::uintmax_t>(-1)) {
+		mFileSize(static_cast<boost::uintmax_t>(-1)),
+		mIteratorBegin(NULL),
+		mIteratorEnd(NULL) {
 }
 
 File::File(const char *fileName) :
 		mFileName(fileName),
-		mFileSize(static_cast<boost::uintmax_t>(-1)) {
+		mFileSize(static_cast<boost::uintmax_t>(-1)),
+		mIteratorBegin(NULL),
+		mIteratorEnd(NULL) {
 	namespace bfs = boost::filesystem;
 	namespace bip = boost::interprocess;
 
@@ -103,6 +106,20 @@ File::File(const char *fileName) :
 	}
 }
 
+#if 0
+// TODO: I don't know this method is usable or not.
+File::File(const File& that) :
+		mFileName(that.mFileName),
+		mFileSize(that.mFileSize),
+		mFileLineFeed(that.mFileLineFeed),
+		mLines(that.mLines),
+		mFileEncodingCandidate(that.mFileEncodingCandidate),
+		mWithBOM(that.mWithBOM),
+		mIteratorBegin(that.mIteratorBegin),
+		mIteratorEnd(that.mIteratorEnd) {
+}
+#endif
+
 File::~File() {
 	int headSize = mLines.head_size();
 	Line * const *head = mLines.head();
@@ -120,5 +137,155 @@ File::~File() {
 			delete line;
 		}
 	}
+	delete mIteratorBegin;
+	delete mIteratorEnd;
 }
 
+File::Iterator *File::begin() {
+	delete mIteratorBegin;
+	mIteratorBegin = Iterator::begin(this);
+	return mIteratorBegin;
+}
+File::Iterator *File::end() {
+	delete mIteratorEnd;
+	mIteratorEnd = Iterator::end(this);
+	return mIteratorEnd;
+}
+
+const std::string& File::getFileName() const {
+	return mFileName;
+}
+
+#if 0
+// TODO: I don't know this method is usable or not.
+File& File::operator =(const File& that) {
+	mFileName = that.mFileName;
+	mFileSize = that.mFileSize;
+	mFileLineFeed = that.mFileLineFeed;
+	mLines = that.mLines;
+	mFileEncodingCandidate = that.mFileEncodingCandidate;
+	mWithBOM = that.mWithBOM;
+	mIteratorBegin = that.mIteratorBegin;
+	mIteratorEnd = that.mIteratorEnd;
+	return *this;
+}
+#endif
+
+File::Iterator::Iterator(const File::Iterator& that) :
+		mFile(that.mFile),
+		mLineIndex(that.mLineIndex),
+		mColumnIndex(that.mColumnIndex),
+		mLineFeedIndex(that.mLineFeedIndex) {
+}
+
+File::Iterator::Iterator(File *file, bool isBegin) :
+		mFile(file) {
+	if (isBegin) {
+		mLineIndex = 0;
+	} else {
+		mLineIndex = file->mLines.size();
+	}
+	mColumnIndex = 0;
+	mLineFeedIndex = -1;
+}
+
+File::Iterator& File::Iterator::operator =(const File::Iterator& that) {
+	mFile = that.mFile;
+	mLineIndex = that.mLineIndex;
+	mColumnIndex = that.mColumnIndex;
+	mLineFeedIndex = that.mLineFeedIndex;
+	return *this;
+}
+
+const char& File::Iterator::operator *() const {
+	if (mLineIndex == mFile->mLines.size()) {
+		return *"\0";
+	}
+	Line *line = mFile->mLines[mLineIndex];
+	if (mLineFeedIndex != -1) {
+		const char *lfBytes = line->getLineFeed(*mFile);
+		assert((size_t) mLineFeedIndex < sizeof(lfBytes) - 1);
+		return lfBytes[mLineFeedIndex];
+	}
+	return (*line)[mColumnIndex];
+}
+
+File::Iterator *File::Iterator::operator ->() const {
+	return const_cast<Iterator *>(this);
+}
+
+File::Iterator& File::Iterator::operator ++() {
+	Line *line = mFile->mLines[mLineIndex];
+	if (line->size() - 1 > mColumnIndex) {
+		mColumnIndex++;
+	} else {
+		if (mFile->mLines.size() > mLineIndex) {
+			bool needChangeLine = false;
+			const char *lfBytes = line->getLineFeed(*mFile);
+			int lfBytesLen = (int) sizeof(lfBytes) - 1;
+			mLineFeedIndex++;
+			if (mLineFeedIndex == lfBytesLen) {
+				mLineFeedIndex = -1;
+				needChangeLine = true;
+			}
+			if (needChangeLine) {
+				mLineIndex++;
+				mColumnIndex = 0;
+			}
+		}
+	}
+	return *this;
+}
+
+File::Iterator File::Iterator::operator ++(int) {
+	Iterator old = *this;
+	this->operator ++();
+	return old;
+}
+
+File::Iterator& File::Iterator::operator --() {
+	if (0 < mColumnIndex) {
+		mColumnIndex--;
+	} else {
+		if (0 < mLineIndex) {
+			mLineIndex--;
+			Line *beforeLine = mFile->mLines[mLineIndex];
+			mColumnIndex = beforeLine->size() - 1;
+		}
+	}
+	return *this;
+}
+
+File::Iterator File::Iterator::operator --(int) {
+	Iterator old = *this;
+	this->operator --();
+	return old;
+}
+
+#if 0
+// TODO: I don't know this method is usable or not.
+bool operator ==(const File& x, const File& y) {
+	return x.getFileName() == y.getFileName();
+}
+
+bool operator !=(const File& x, const File& y) {
+	return !(x == y);
+}
+#endif
+
+bool operator ==(const File::Iterator& x, const File::Iterator& y) {
+	if (x.mFile == y.mFile) {
+		if (x.mLineIndex == y.mLineIndex) {
+			if (x.mColumnIndex == y.mColumnIndex) {
+				if (x.mLineFeedIndex == y.mLineFeedIndex) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+bool operator !=(const File::Iterator& x, const File::Iterator& y) {
+	return !(x == y);
+}

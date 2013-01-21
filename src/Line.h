@@ -1,28 +1,35 @@
 #ifndef _f6bb38f6_3f7c_4911_8dfe_f2333430c212_
 #define _f6bb38f6_3f7c_4911_8dfe_f2333430c212_
 
+#include <boost/regex.hpp>
+
 #include <string>
 
 #include "GapBuffer.h"
 
-class Line {
+class File;
+
+class Line : public GapBuffer<char> {
 public:
 	enum LineFeed {
 		LineFeedDefault = -1,
-		LineFeedNone = 0,
-		LineFeedCR = 1,
-		LineFeedLF = 2,
-		LineFeedCRLF = 3,
+		LineFeedCR = 0,
+		LineFeedLF = 1,
+		LineFeedCRLF = 2,
+		LineFeedNone = 3,
 	};
 
-	Line(std::string& str, LineFeed lineFeedCode = LineFeedDefault) :
-			mLineFeed(lineFeedCode) {
-		const char *data = str.data();
-		mLineData.insert(0, data, data + str.size());
-	}
+	static const char *LineFeedBytes[];
+
+	Line(std::string& str, LineFeed lineFeedCode = LineFeedDefault);
+
+#if 0
+// TODO: I don't know this method is usable or not.
+	Line(Line& that);
+#endif
 
 	static Line *blankLine() {
-		static Line line;
+		static Line line(1);
 		return &line;
 	}
 
@@ -30,8 +37,8 @@ public:
 			char **lineEnd, char **nextLineBegin) {
 		*nextLineBegin = NULL;
 		*lineEnd = NULL;
-		if (strstr(encodingName, "UTF-1") == encodingName ||
-				strstr(encodingName, "UTF-3") == encodingName) {
+		if (strstr(encodingName, "UTF-16") == encodingName ||
+				strstr(encodingName, "UTF-32") == encodingName) {
 			// TODO:
 		} else {
 			boost::regex re("(\\r|\\n)");
@@ -55,15 +62,20 @@ public:
 		return LineFeedNone;
 	}
 
+	const char *getLineFeed(File& file) const;
+
+#if 0
+// TODO: I don't know this method is usable or not.
+	Line& operator =(const Line& that);
+#endif
+
 private:
-	GapBuffer<char> mLineData;
 	LineFeed mLineFeed;
 
 	/*
 	 * Constructor for blankLine.
 	 */
-	Line() : mLineData(1), mLineFeed(LineFeedDefault) {
-	}
+	explicit Line(int capacity = 64);
 };
 
 #endif
