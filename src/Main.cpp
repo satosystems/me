@@ -27,6 +27,7 @@
 
 #include "Utf8Utils.h"
 #include "File.h"
+#include "Buffer.h"
 #include "Logger.h"
 
 #define CTRL_X 0x18
@@ -34,18 +35,6 @@
 
 static void setSignalHandler(int signame);
 static void signalHandler(int signame);
-
-class Buffer {
-public:
-	Buffer() : mFile(NULL), x(0), y(0) {
-	}
-	~Buffer() {
-		delete mFile;
-	}
-	File *mFile;
-	int x;
-	int y;
-};
 
 std::vector<int> gKeyBuffer;
 std::vector<Buffer *> gBuffers;
