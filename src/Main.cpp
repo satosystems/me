@@ -35,8 +35,20 @@
 static void setSignalHandler(int signame);
 static void signalHandler(int signame);
 
+class Buffer {
+public:
+	Buffer() : mFile(NULL), x(0), y(0) {
+	}
+	~Buffer() {
+		delete mFile;
+	}
+	File *mFile;
+	int x;
+	int y;
+};
+
 std::vector<int> gKeyBuffer;
-std::vector<File *> gFiles;
+std::vector<Buffer *> gBuffers;
 
 static void setSignalHandler(int signame) {
 	if (signal(signame, signalHandler) == SIG_ERR) {
@@ -79,22 +91,21 @@ int me_addstr(const char *utf8str) {
 
 static void loop() {
 	int ch;
-	int x = 0, y = 0;
 	std::string mbcbuf;
 	int mbcl = 0; // multi byte char length
 
 	setSignalHandler(SIGINT);
 
-	File *file = gFiles[0];
-	file->load();
-	int lineCount = file->getLineCount();
+	Buffer *buffer = gBuffers[0];
+	buffer->mFile->load();
+	int lineCount = buffer->mFile->getLineCount();
 	for (int i = 0; i < lineCount; i++) {
-		Line *line = file->getLine(i);
+		Line *line = buffer->mFile->getLine(i);
 		addnstr(line->head(), line->head_size());
 		addnstr(line->tail(), line->tail_size());
-		getyx(stdscr, y, x);
-		move(++y, 0);
-		if (y == LINES - 1) {
+		getyx(stdscr, buffer->y, buffer->x);
+		move(++buffer->y, 0);
+		if (buffer->y == LINES - 1) {
 			break;
 		}
 	}
@@ -106,26 +117,26 @@ static void loop() {
 		if (mbcl <= 0) {
 			switch (ch) {
 			case KEY_LEFT:
-				x -= 1;
+				buffer->x -= 1;
 				gKeyBuffer.clear();
 				break;
 			case KEY_RIGHT:
-				x += 1;
+				buffer->x += 1;
 				gKeyBuffer.clear();
 				break;
 			case KEY_UP:
-				y -= 1;
+				buffer->y -= 1;
 				gKeyBuffer.clear();
 				break;
 			case KEY_DOWN:
-				y += 1;
+				buffer->y += 1;
 				gKeyBuffer.clear();
 				break;
 			case KEY_ESC:
 				if (gKeyBuffer.size() == 1 && gKeyBuffer.back() == KEY_ESC) {
 					gKeyBuffer.clear();
 					mvaddstr(LINES - 1, 0, ":");
-					getyx(stdscr, y, x);
+					getyx(stdscr, buffer->y, buffer->x);
 				} else {
 					gKeyBuffer.push_back(ch);
 				}
@@ -157,23 +168,27 @@ static void loop() {
 					width = wcwidth(us[0]);
 					Logger::d("width:%d", width);
 				}
-				x += width;
+				buffer->x += width;
 				mbcbuf.clear();
 			}
 		}
 
-		if (x <= 0) {
-			x = 0;
-		} else if (x > COLS - 1) {
-			x = COLS - 1;
-		} else if (y <= 0) {
-			y = 0;
-		} else if (y >= LINES - 1) {
-			y = LINES - 1;
+		if (buffer->x <= 0) {
+			buffer->x = 0;
+		} else if (buffer->x > COLS - 1) {
+			buffer->x = COLS - 1;
+		} else if (buffer->y <= 0) {
+			buffer->y = 0;
+		} else if (buffer->y >= LINES - 1) {
+			buffer->y = LINES - 1;
 		}
 
-		move(y, x);
+		move(buffer->y, buffer->x);
 	}
+	for (std::vector<Buffer *>::iterator it = gBuffers.begin(); it != gBuffers.end(); ++it) {
+		delete *it;
+	}
+	gBuffers.clear();
 }
 
 static void parseOption(int argc, char *argv[]) {
@@ -214,10 +229,14 @@ static void parseOption(int argc, char *argv[]) {
 		if (params.count("input-file")) {
 			InputFiles files(params["input-file"].as<InputFiles>());
 			for (InputFiles::iterator it = files.begin(); it != files.end(); ++it) {
-				gFiles.push_back(new File(*it));
+				Buffer *buffer = new Buffer;
+				buffer->mFile = new File(*it);
+				gBuffers.push_back(buffer);
 			}
 		} else {
-			gFiles.push_back(new File());
+			Buffer *buffer = new Buffer;
+			buffer->mFile = new File;
+			gBuffers.push_back(buffer);
 		}
 	} catch (const std::exception& error) {
 		std::cerr << error.what() << std::endl;
