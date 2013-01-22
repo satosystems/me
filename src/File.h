@@ -22,27 +22,18 @@ public:
 		Iterator(const Iterator& that);
 		Iterator& operator =(const Iterator& that);
 		const char& operator *() const;
-		File::Iterator *operator ->() const;
+		Iterator *operator ->() const;
 		Iterator& operator ++();
 		Iterator operator ++(int);
 		Iterator& operator --();
 		Iterator operator --(int);
 
-		File *mFile;
+		const File *mFile;
 		int mLineIndex;
 		int mColumnIndex;
 		int mLineFeedIndex;
 	private:
-		Iterator(File *file, bool isBegin);
-
-		static Iterator *begin(File *file) {
-			return new Iterator(file, true);
-		}
-
-		static Iterator *end(File *file) {
-			return new Iterator(file, false);
-		}
-
+		Iterator(File *file);
 	};
 	File();
 	File(const char *fileName);
@@ -53,8 +44,8 @@ public:
 #endif
 	~File();
 
-	Iterator *begin();
-	Iterator *end();
+	Iterator begin();
+	Iterator end();
 
 	const std::string& getFileName() const;
 
@@ -79,8 +70,8 @@ private:
 	 */
 	std::vector<Encoding> mFileEncodingCandidate;
 	Bom mBom;
-	Iterator *mIteratorBegin;
-	Iterator *mIteratorEnd;
+	Iterator mIteratorBegin;
+	Iterator mIteratorEnd;
 };
 
 #if 0

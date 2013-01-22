@@ -132,7 +132,7 @@ public:
 		return LineFeedNone;
 	}
 
-	const char *getLineFeed(File& file) const;
+	const char *getLineFeed(const File& file) const;
 
 #if 0
 // TODO: I don't know this method is usable or not.

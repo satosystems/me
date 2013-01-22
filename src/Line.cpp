@@ -29,7 +29,7 @@ Line::Line(int capacity) :
 		mLineFeed(LineFeedDefault) {
 }
 
-const char *Line::getLineFeed(File& file) const {
+const char *Line::getLineFeed(const File& file) const {
 	LineFeed lf = mLineFeed == LineFeedDefault ? file.mFileLineFeed : mLineFeed;
 	if (lf == LineFeedNone) {
 		return "";

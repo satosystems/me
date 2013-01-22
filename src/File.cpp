@@ -16,8 +16,8 @@ static char gUtf32LE[] = "UTF-32LE";
 File::File() :
 		mFileSize(static_cast<boost::uintmax_t>(-1)),
 		mBom(BomNone),
-		mIteratorBegin(NULL),
-		mIteratorEnd(NULL) {
+		mIteratorBegin(this),
+		mIteratorEnd(this) {
 	// TODO: read default encoding and line feed from properties file.
 }
 
@@ -25,8 +25,8 @@ File::File(const char *fileName) :
 		mFileName(fileName),
 		mFileSize(static_cast<boost::uintmax_t>(-1)),
 		mBom(BomNone),
-		mIteratorBegin(NULL),
-		mIteratorEnd(NULL) {
+		mIteratorBegin(this),
+		mIteratorEnd(this) {
 	// TODO: read default encoding and line feed from properties file.
 }
 
@@ -34,8 +34,8 @@ File::File(std::string fileName) :
 		mFileName(fileName),
 		mFileSize(static_cast<boost::uintmax_t>(-1)),
 		mBom(BomNone),
-		mIteratorBegin(NULL),
-		mIteratorEnd(NULL) {
+		mIteratorBegin(this),
+		mIteratorEnd(this) {
 	// TODO: read default encoding and line feed from properties file.
 }
 
@@ -70,18 +70,18 @@ File::~File() {
 			delete line;
 		}
 	}
-	delete mIteratorBegin;
-	delete mIteratorEnd;
 }
 
-File::Iterator *File::begin() {
-	delete mIteratorBegin;
-	mIteratorBegin = Iterator::begin(this);
+File::Iterator File::begin() {
+	mIteratorBegin.mLineIndex = 0;
+	mIteratorBegin.mColumnIndex = 0;
+	mIteratorBegin.mLineFeedIndex = -1;
 	return mIteratorBegin;
 }
-File::Iterator *File::end() {
-	delete mIteratorEnd;
-	mIteratorEnd = Iterator::end(this);
+File::Iterator File::end() {
+	mIteratorBegin.mLineIndex = mLines.size();
+	mIteratorBegin.mColumnIndex = 0;
+	mIteratorBegin.mLineFeedIndex = -1;
 	return mIteratorEnd;
 }
 
@@ -269,22 +269,18 @@ File& File::operator =(const File& that) {
 }
 #endif
 
+File::Iterator::Iterator(File *file) :
+		mFile(file),
+		mLineIndex(-1),
+		mColumnIndex(-1),
+		mLineFeedIndex(-1) {
+}
+
 File::Iterator::Iterator(const File::Iterator& that) :
 		mFile(that.mFile),
 		mLineIndex(that.mLineIndex),
 		mColumnIndex(that.mColumnIndex),
 		mLineFeedIndex(that.mLineFeedIndex) {
-}
-
-File::Iterator::Iterator(File *file, bool isBegin) :
-		mFile(file) {
-	if (isBegin) {
-		mLineIndex = 0;
-	} else {
-		mLineIndex = file->mLines.size();
-	}
-	mColumnIndex = 0;
-	mLineFeedIndex = -1;
 }
 
 File::Iterator& File::Iterator::operator =(const File::Iterator& that) {
