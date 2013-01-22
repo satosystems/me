@@ -27,6 +27,7 @@
 
 #include "Utf8Utils.h"
 #include "File.h"
+#include "Logger.h"
 
 #define CTRL_X 0x18
 #define KEY_ESC 0x1b
@@ -35,68 +36,19 @@ static void setSignalHandler(int signame);
 static void signalHandler(int signame);
 class Tracer;
 
-Tracer *gTracer;
 std::vector<int> gKeyBuffer;
 std::vector<File *> gFiles;
 
-class Tracer {
-public:
-	Tracer() {
-		mFile = fopen("trace.log", "a");
-		assert(mFile);
-	}
-
-	~Tracer() {
-		gTracer = NULL;
-		fclose(mFile);
-	}
-
-	void w(const char *format, ...) {
-		va_list arg;
-		va_start(arg, format);
-		p("W: ", format, &arg);
-		va_end(arg);
-	}
-
-	void d(const char *format, ...) {
-		va_list arg;
-		va_start(arg, format);
-		p("D: ", format, &arg);
-		va_end(arg);
-	}
-
-	void e(const char *format, ...) {
-		va_list arg;
-		va_start(arg, format);
-		p("E: ", format, &arg);
-		va_end(arg);
-	}
-
-private:
-	FILE *mFile;
-
-	void p(const char *tag, const char *format, va_list *arg) {
-		fprintf(mFile, "%s", tag);
-		vfprintf(mFile, format, *arg);
-		fprintf(mFile, "\n");
-		fflush(mFile);
-	}
-};
-
 static void setSignalHandler(int signame) {
 	if (signal(signame, signalHandler) == SIG_ERR) {
-		if (gTracer) {
-			gTracer->e("failed to set signal handler");
-		}
+		Logger::e("failed to set signal handler");
 		putchar(CTRL_X);
 	}
 }
 
 static void signalHandler(int signame) {
 	if (signame == SIGINT) {
-		if (gTracer) {
-			gTracer->d("signal:SIGINT (%d)", signame);
-		}
+		Logger::d("signal:SIGINT (%d)", signame);
 		setSignalHandler(signame);
 	}
 }
@@ -120,7 +72,7 @@ int me_addstr(const char *utf8str) {
 			sprintf(buf, "%02X", normalized[i] & 0xFF);
 			hexNor.append(buf);
 		}
-		gTracer->d("input:[%s] normalized[%s]", hexOrg.c_str(), hexNor.c_str());
+		Logger::d("input:[%s] normalized[%s]", hexOrg.c_str(), hexNor.c_str());
 	}
 	addstr(normalized.c_str());
 	return normalized.size();
@@ -131,9 +83,7 @@ static void loop() {
 	int x = 0, y = 0;
 	std::string mbcbuf;
 	int mbcl = 0; // multi byte char length
-	Tracer tracer;
 
-	gTracer = &tracer;
 	setSignalHandler(SIGINT);
 
 	File *file = gFiles[0];
@@ -150,7 +100,7 @@ static void loop() {
 	getyx(stdscr, y, x);
 
 	while ((ch = getch()) != CTRL_X) {
-		tracer.d("ch:0x%x (%d)", ch, ch);
+		Logger::d("ch:0x%x (%d)", ch, ch);
 		if (mbcl <= 0) {
 			switch (ch) {
 			case KEY_LEFT:
@@ -181,9 +131,9 @@ static void loop() {
 			default:
 				if (mbcl <= 0) {
 					mbcl = guessUtf8SequenceLength(ch);
-					tracer.d("mbcl:%d", mbcl);
+					Logger::d("mbcl:%d", mbcl);
 					if (mbcl == -1) {
-						tracer.w("Invalid UTF-8 sequence:%x", ch);
+						Logger::w("Invalid UTF-8 sequence:%x", ch);
 						continue;
 					}
 				}
@@ -196,14 +146,14 @@ static void loop() {
 			mbcl--;
 			if (mbcl == 0) {
 				me_addstr(mbcbuf.c_str());
-				tracer.d("[%s]", mbcbuf.c_str());
+				Logger::d("[%s]", mbcbuf.c_str());
 				int width = 1;
 				if (mbcbuf.size() > 1) {
 					icu::StringPiece sp(mbcbuf);
 					icu::UnicodeString us(icu::UnicodeString::fromUTF8(sp));
 					assert(1 == us.length());
 					width = wcwidth(us[0]);
-					tracer.d("width:%d", width);
+					Logger::d("width:%d", width);
 				}
 				x += width;
 				mbcbuf.clear();
