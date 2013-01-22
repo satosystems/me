@@ -3,7 +3,8 @@
 
 Line::Line(std::string& str, LineFeed lineFeedCode) :
 		GapBuffer<char>(),
-		mLineFeed(lineFeedCode) {
+		mLineFeed(lineFeedCode),
+		mCharCountCache(-1) {
 	const char *data = str.data();
 	insert(0, data, data + str.size());
 }
@@ -24,9 +25,54 @@ Line::Line(Line& that) :
 }
 #endif
 
-Line::Line(int capacity) :
-		GapBuffer<char>(capacity),
-		mLineFeed(LineFeedDefault) {
+Line::Line() :
+		GapBuffer<char>(1),
+		mLineFeed(LineFeedDefault),
+		mCharCountCache(0) {
+}
+
+void Line::clear() {
+	mCharCountCache = -1;
+	GapBuffer<char> *super = this;
+	super->clear();
+
+}
+
+int Line::insert(int pos, const char val) {
+	mCharCountCache = -1;
+	GapBuffer<char> *super = this;
+	return super->insert(pos, val);
+}
+
+int Line::insert(int pos, int num, const char val) {
+	mCharCountCache = -1;
+	GapBuffer<char> *super = this;
+	return super->insert(pos, num, val);
+}
+
+template<class InputIterator>
+int Line::insert(int pos, InputIterator begin, InputIterator end) {
+	mCharCountCache = -1;
+	GapBuffer<char> *super = this;
+	return super->insert(pos, begin, end);
+}
+
+void Line::erase(int begin, int end) {
+	mCharCountCache = -1;
+	GapBuffer<char> *super = this;
+	super->erase(begin, end);
+}
+
+void Line::erase(int pos) {
+	mCharCountCache = -1;
+	GapBuffer<char> *super = this;
+	super->erase(pos);
+}
+
+void Line::push_back(const char val) {
+	mCharCountCache = -1;
+	GapBuffer<char> *super = this;
+	super->push_back(val);
 }
 
 const char *Line::getLineFeed(const File& file) const {
@@ -54,6 +100,24 @@ const char *Line::getLineFeed(const File& file) const {
 		}
 	}
 	return LineFeedBytes[lf + offset];
+}
+
+int Line::getCharCount() {
+	if (mCharCountCache != -1) {
+		return mCharCountCache;
+	}
+	int len = size();
+	int count = 0;
+	for (int i = 0; i < len; ) {
+		int sl = guessUtf8SequenceLength((*this)[i]);
+		if (sl == -1) {
+			sl = 1;
+		}
+		i += sl;
+		count++;
+	}
+	mCharCountCache = count;
+	return count;
 }
 
 #if 0

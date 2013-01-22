@@ -25,6 +25,7 @@
 #endif
 #include <wchar.h>
 
+#include "API.h"
 #include "Utf8Utils.h"
 #include "File.h"
 #include "Buffer.h"
@@ -95,6 +96,7 @@ static void loop() {
 		getyx(stdscr, buffer->y, buffer->x);
 		move(++buffer->y, 0);
 		if (buffer->y == LINES - 1) {
+			buffer->y = buffer->x = 0;
 			break;
 		}
 	}
@@ -106,20 +108,21 @@ static void loop() {
 		if (mbcl <= 0) {
 			switch (ch) {
 			case KEY_LEFT:
-				buffer->x -= 1;
-				gKeyBuffer.clear();
+//				buffer->x -= 1;
+//				gKeyBuffer.clear();
 				break;
 			case KEY_RIGHT:
-				buffer->x += 1;
-				gKeyBuffer.clear();
+				me_right();
+//				buffer->x += 1;
+//				gKeyBuffer.clear();
 				break;
 			case KEY_UP:
-				buffer->y -= 1;
-				gKeyBuffer.clear();
+//				buffer->y -= 1;
+//				gKeyBuffer.clear();
 				break;
 			case KEY_DOWN:
-				buffer->y += 1;
-				gKeyBuffer.clear();
+//				buffer->y += 1;
+//				gKeyBuffer.clear();
 				break;
 			case KEY_ESC:
 				if (gKeyBuffer.size() == 1 && gKeyBuffer.back() == KEY_ESC) {
@@ -162,17 +165,17 @@ static void loop() {
 			}
 		}
 
-		if (buffer->x <= 0) {
-			buffer->x = 0;
-		} else if (buffer->x > COLS - 1) {
-			buffer->x = COLS - 1;
-		} else if (buffer->y <= 0) {
-			buffer->y = 0;
-		} else if (buffer->y >= LINES - 1) {
-			buffer->y = LINES - 1;
-		}
-
-		move(buffer->y, buffer->x);
+//		if (buffer->x <= 0) {
+//			buffer->x = 0;
+//		} else if (buffer->x > COLS - 1) {
+//			buffer->x = COLS - 1;
+//		} else if (buffer->y <= 0) {
+//			buffer->y = 0;
+//		} else if (buffer->y >= LINES - 1) {
+//			buffer->y = LINES - 1;
+//		}
+//
+//		move(buffer->y, buffer->x);
 	}
 	for (std::vector<Buffer *>::iterator it = gBuffers.begin(); it != gBuffers.end(); ++it) {
 		delete *it;
@@ -218,13 +221,11 @@ static void parseOption(int argc, char *argv[]) {
 		if (params.count("input-file")) {
 			InputFiles files(params["input-file"].as<InputFiles>());
 			for (InputFiles::iterator it = files.begin(); it != files.end(); ++it) {
-				Buffer *buffer = new Buffer;
-				buffer->mFile = new File(*it);
+				Buffer *buffer = new Buffer(new File(*it));
 				gBuffers.push_back(buffer);
 			}
 		} else {
-			Buffer *buffer = new Buffer;
-			buffer->mFile = new File;
+			Buffer *buffer = new Buffer(new File);
 			gBuffers.push_back(buffer);
 		}
 	} catch (const std::exception& error) {

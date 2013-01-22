@@ -30,7 +30,7 @@ public:
 #endif
 
 	static Line *blankLine() {
-		static Line line(1);
+		static Line line;
 		return &line;
 	}
 
@@ -132,7 +132,24 @@ public:
 		return LineFeedNone;
 	}
 
+	void clear();
+
+	int insert(int pos, const char val);
+
+	int insert(int pos, int num, const char val);
+
+	template<class InputIterator>
+	int insert(int pos, InputIterator begin, InputIterator end);
+
+	void erase(int begin, int end);
+
+	void erase(int pos);
+
+	void push_back(const char val);
+
 	const char *getLineFeed(const File& file) const;
+
+	int getCharCount();
 
 #if 0
 // TODO: I don't know this method is usable or not.
@@ -141,11 +158,12 @@ public:
 
 private:
 	LineFeed mLineFeed;
+	int mCharCountCache;
 
 	/*
 	 * Constructor for blankLine.
 	 */
-	explicit Line(int capacity = 64);
+	Line();
 };
 
 #endif

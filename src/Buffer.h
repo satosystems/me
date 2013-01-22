@@ -7,7 +7,7 @@
 
 class Buffer {
 public:
-	Buffer() : mFile(NULL), x(0), y(0) {
+	Buffer(File *file) : mFile(file), x(0), y(0), column(0), lineno(0) {
 	}
 	~Buffer() {
 		delete mFile;
@@ -15,6 +15,8 @@ public:
 	File *mFile;
 	int x;
 	int y;
+	int column;
+	int lineno;
 };
 
 #endif
