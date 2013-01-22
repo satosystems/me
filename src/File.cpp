@@ -27,21 +27,88 @@ File::File(const char *fileName) :
 		mBom(BomNone),
 		mIteratorBegin(NULL),
 		mIteratorEnd(NULL) {
+	// TODO: read default encoding and line feed from properties file.
+}
+
+File::File(std::string fileName) :
+		mFileName(fileName),
+		mFileSize(static_cast<boost::uintmax_t>(-1)),
+		mBom(BomNone),
+		mIteratorBegin(NULL),
+		mIteratorEnd(NULL) {
+	// TODO: read default encoding and line feed from properties file.
+}
+
+#if 0
+// TODO: I don't know this method is usable or not.
+File::File(const File& that) :
+		mFileName(that.mFileName),
+		mFileSize(that.mFileSize),
+		mFileLineFeed(that.mFileLineFeed),
+		mLines(that.mLines),
+		mFileEncodingCandidate(that.mFileEncodingCandidate),
+		mWithBOM(that.mWithBOM),
+		mIteratorBegin(that.mIteratorBegin),
+		mIteratorEnd(that.mIteratorEnd) {
+}
+#endif
+
+File::~File() {
+	int headSize = mLines.head_size();
+	Line * const *head = mLines.head();
+	for (int i = 0; i < headSize; i++) {
+		const Line *line = head[i];
+		if (line != Line::blankLine()) {
+			delete line;
+		}
+	}
+	int tailSize = mLines.tail_size();
+	Line * const *tail = mLines.tail();
+	for (int i = 0; i < tailSize; i++) {
+		const Line *line = tail[i];
+		if (line != Line::blankLine()) {
+			delete line;
+		}
+	}
+	delete mIteratorBegin;
+	delete mIteratorEnd;
+}
+
+File::Iterator *File::begin() {
+	delete mIteratorBegin;
+	mIteratorBegin = Iterator::begin(this);
+	return mIteratorBegin;
+}
+File::Iterator *File::end() {
+	delete mIteratorEnd;
+	mIteratorEnd = Iterator::end(this);
+	return mIteratorEnd;
+}
+
+const std::string& File::getFileName() const {
+	return mFileName;
+}
+
+void File::load() {
 	namespace bfs = boost::filesystem;
 	namespace bip = boost::interprocess;
 
-	const bfs::path path(fileName);
+	if (mFileName.empty()) {
+		return;
+	}
+	const bfs::path path(mFileName);
 	boost::system::error_code ec;
 	const bfs::file_status fs = bfs::status(path, ec);
 	if (fs.type() != bfs::status_error) {
 		// TODO: symlink
+		// TODO: directory
 		const bool isFile = bfs::is_regular_file(fs);
 		if (isFile) {
 			const boost::uintmax_t fileSize = bfs::file_size(path, ec);
 			if (fileSize != static_cast<boost::uintmax_t>(-1) && !ec) {
 				mFileSize = fileSize;
 
-				bip::file_mapping map(fileName, bip::read_only);
+				bip::file_mapping map(mFileName.c_str(), bip::read_only);
 				bip::mapped_region view(map, bip::read_only); // TODO: lazy read
 				const char *ptr = (const char *) view.get_address();
 				const size_t size = view.get_size();
@@ -175,55 +242,17 @@ File::File(const char *fileName) :
 	}
 }
 
-#if 0
-// TODO: I don't know this method is usable or not.
-File::File(const File& that) :
-		mFileName(that.mFileName),
-		mFileSize(that.mFileSize),
-		mFileLineFeed(that.mFileLineFeed),
-		mLines(that.mLines),
-		mFileEncodingCandidate(that.mFileEncodingCandidate),
-		mWithBOM(that.mWithBOM),
-		mIteratorBegin(that.mIteratorBegin),
-		mIteratorEnd(that.mIteratorEnd) {
+int File::getLineCount() const {
+	return mLines.size();
 }
-#endif
 
-File::~File() {
-	int headSize = mLines.head_size();
-	Line * const *head = mLines.head();
-	for (int i = 0; i < headSize; i++) {
-		const Line *line = head[i];
-		if (line != Line::blankLine()) {
-			delete line;
-		}
+Line *File::getLine(int index) const {
+	if (mLines.size() > index) {
+		return mLines[index];
 	}
-	int tailSize = mLines.tail_size();
-	Line * const *tail = mLines.tail();
-	for (int i = 0; i < tailSize; i++) {
-		const Line *line = tail[i];
-		if (line != Line::blankLine()) {
-			delete line;
-		}
-	}
-	delete mIteratorBegin;
-	delete mIteratorEnd;
+	return NULL;
 }
 
-File::Iterator *File::begin() {
-	delete mIteratorBegin;
-	mIteratorBegin = Iterator::begin(this);
-	return mIteratorBegin;
-}
-File::Iterator *File::end() {
-	delete mIteratorEnd;
-	mIteratorEnd = Iterator::end(this);
-	return mIteratorEnd;
-}
-
-const std::string& File::getFileName() const {
-	return mFileName;
-}
 
 #if 0
 // TODO: I don't know this method is usable or not.

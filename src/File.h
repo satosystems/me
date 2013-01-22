@@ -46,6 +46,7 @@ public:
 	};
 	File();
 	File(const char *fileName);
+	File(std::string fileName);
 #if 0
 // TODO: I don't know this method is usable or not.
 	File(const File& that);
@@ -56,6 +57,12 @@ public:
 	Iterator *end();
 
 	const std::string& getFileName() const;
+
+	void load();
+
+	int getLineCount() const;
+
+	Line *getLine(int index) const;
 
 #if 0
 // TODO: I don't know this method is usable or not.

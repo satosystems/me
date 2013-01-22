@@ -25,7 +25,7 @@ ifeq ($(OS),Windows_NT)
 INCLUDES += -I/usr/include/ncurses
 endif
 
-LIBS = -L/usr/local/lib -lboost_system -lboost_filesystem -lboost_regex
+LIBS = -L/usr/local/lib -lboost_system -lboost_filesystem -lboost_regex -lboost_program_options
 
 ifeq ($(UNAME),Darwin)
 LIBS += -lncurses

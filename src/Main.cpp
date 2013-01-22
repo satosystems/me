@@ -13,8 +13,12 @@
 #include <unicode/stringpiece.h>
 #include <unicode/unistr.h>
 
+#include <boost/program_options.hpp>
+
 #include <string>
 #include <vector>
+#include <iostream>
+#include <exception>
 
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE
@@ -22,6 +26,7 @@
 #include <wchar.h>
 
 #include "Utf8Utils.h"
+#include "File.h"
 
 #define CTRL_X 0x18
 #define KEY_ESC 0x1b
@@ -32,6 +37,7 @@ class Tracer;
 
 Tracer *gTracer;
 std::vector<int> gKeyBuffer;
+std::vector<File *> gFiles;
 
 class Tracer {
 public:
@@ -95,7 +101,7 @@ static void signalHandler(int signame) {
 	}
 }
 
-int me_addstr(const char * const utf8str) {
+int me_addstr(const char *utf8str) {
 	size_t len = strlen(utf8str);
 	if (len == 1) {
 		addstr(utf8str);
@@ -129,7 +135,18 @@ static void loop() {
 
 	gTracer = &tracer;
 	setSignalHandler(SIGINT);
-	mvaddstr(0, 0, "Press Ctrl-x to exit.");
+
+	File *file = gFiles[0];
+	file->load();
+	int lineCount = file->getLineCount();
+	for (int i = 0; i < lineCount; i++) {
+		Line *line = file->getLine(i);
+		addnstr(line->head(), line->head_size());
+		addnstr(line->tail(), line->tail_size());
+		getyx(stdscr, y, x);
+		move(++y, x);
+	}
+
 	getyx(stdscr, y, x);
 
 	while ((ch = getch()) != CTRL_X) {
@@ -207,8 +224,60 @@ static void loop() {
 	}
 }
 
+static void parseOption(int argc, char *argv[]) {
+	namespace bpo = boost::program_options;
+
+	bpo::options_description desc("Option");
+	typedef std::vector<std::string> InputFiles;
+	desc.add_options()
+		("help,h", "help")
+		("version", "version");
+
+	bpo::options_description hidden("Hidden");
+	hidden.add_options()
+		("input-file", bpo::value<InputFiles>(), "input file");
+
+	bpo::options_description opt;
+	opt.add(desc).add(hidden);
+
+	bpo::positional_options_description pos;
+	pos.add("input-file", 64);
+
+	try {
+		bpo::variables_map params;
+		bpo::store(bpo::command_line_parser(argc, argv)
+			.options(opt)
+			.positional(pos)
+			.run(), params);
+		bpo::notify(params);
+
+		if (params.count("help")) {
+			std::cout << desc << std::endl;
+			exit(EXIT_SUCCESS);
+		} else if (params.count("version")) {
+			std::cout << "me version 0.0.1" << std::endl;
+			exit(EXIT_SUCCESS);
+		}
+
+		if (params.count("input-file")) {
+			InputFiles files(params["input-file"].as<InputFiles>());
+			for (InputFiles::iterator it = files.begin(); it != files.end(); ++it) {
+				gFiles.push_back(new File(*it));
+			}
+		} else {
+			gFiles.push_back(new File());
+		}
+	} catch (const std::exception& error) {
+		std::cerr << error.what() << std::endl;
+		std::cerr << desc << std::endl;
+		exit(EXIT_FAILURE);
+	}
+}
+
 int main(int argc, char *argv[]) {
 	setlocale(LC_ALL, "");
+	parseOption(argc, argv);
+
 	initscr();
 	cbreak();
 	noecho();
@@ -220,4 +289,3 @@ int main(int argc, char *argv[]) {
 	endwin();
 	return EXIT_SUCCESS;
 }
-
