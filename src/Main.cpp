@@ -170,6 +170,7 @@ static void loop() {
 						continue;
 					}
 				}
+				break;
 			}
 		}
 		if (mbcl > 0) {
