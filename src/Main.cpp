@@ -94,7 +94,7 @@ static void loop() {
 		addnstr(line->head(), line->head_size());
 		addnstr(line->tail(), line->tail_size());
 		getyx(stdscr, y, x);
-		move(++y, x);
+		move(++y, 0);
 	}
 
 	getyx(stdscr, y, x);

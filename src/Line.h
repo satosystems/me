@@ -111,19 +111,19 @@ public:
 			}
 			*lineEnd = const_cast<char *>(fileEnd);
 		} else {
-			for (int i = 0; lineBegin < fileEnd ; i++) {
-				if (lineBegin[i] == 0x00 && lineBegin[i + 1] == '\r') {
-					*lineEnd = const_cast<char *>(lineBegin) + i;
-					*nextLineBegin = *lineEnd + 2;
-					if (lineBegin + i + 4 < fileEnd && lineBegin[i + 2] == 0x00 && lineBegin[i + 3] == '\n') {
-						*nextLineBegin += 2;
+			for (char *cp = const_cast<char *>(lineBegin); cp < fileEnd; cp++) {
+				if (cp[0] == '\r') {
+					*lineEnd = cp;
+					*nextLineBegin = *lineEnd + 1;
+					if (cp + 1  < fileEnd && cp[1] == '\n') {
+						*nextLineBegin += 1;
 						return LineFeedCRLF;
 					}
 					return LineFeedCR;
 				}
-				if (lineBegin[i] == 0x00 && lineBegin[i + 1] == '\n') {
-					*lineEnd = const_cast<char *>(lineBegin) + i;
-					*nextLineBegin = *lineEnd + 2;
+				if (cp[0] == '\n') {
+					*lineEnd = cp;
+					*nextLineBegin = *lineEnd + 1;
 					return LineFeedLF;
 				}
 			}

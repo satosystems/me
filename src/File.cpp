@@ -211,10 +211,10 @@ void File::load() {
 				}
 
 				const char *fileEnd = ptr + size;
+				char *nextLineBegin = NULL;
+				char *lineEnd = NULL;
 				mFileLineFeed = Line::LineFeedDefault;
-				while (lineBegin != NULL) {
-					char *nextLineBegin = NULL;
-					char *lineEnd = NULL;
+				while (nextLineBegin != fileEnd) {
 					Line::LineFeed lf =
 						Line::searchLineFeed(lineBegin, fileEnd, encodingName, &lineEnd, &nextLineBegin);
 					if (mFileLineFeed == Line::LineFeedDefault) {
