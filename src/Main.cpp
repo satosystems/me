@@ -96,11 +96,11 @@ static void loop() {
 		getyx(stdscr, buffer->y, buffer->x);
 		move(++buffer->y, 0);
 		if (buffer->y == LINES - 1) {
-			buffer->y = buffer->x = 0;
 			break;
 		}
 	}
 
+	buffer->y = buffer->x = 0;
 	move(0, 0);
 
 	while ((ch = getch()) != CTRL_X) {
@@ -244,6 +244,9 @@ int main(int argc, char *argv[]) {
 	noecho();
 	nonl();
 	keypad(stdscr, TRUE);
+	clearok(stdscr, TRUE);
+	idlok(stdscr, TRUE);
+	scrollok(stdscr, TRUE);
 
 	loop();
 
