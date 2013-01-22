@@ -34,7 +34,6 @@
 
 static void setSignalHandler(int signame);
 static void signalHandler(int signame);
-class Tracer;
 
 std::vector<int> gKeyBuffer;
 std::vector<File *> gFiles;
@@ -95,9 +94,12 @@ static void loop() {
 		addnstr(line->tail(), line->tail_size());
 		getyx(stdscr, y, x);
 		move(++y, 0);
+		if (y == LINES - 1) {
+			break;
+		}
 	}
 
-	getyx(stdscr, y, x);
+	move(0, 0);
 
 	while ((ch = getch()) != CTRL_X) {
 		Logger::d("ch:0x%x (%d)", ch, ch);
