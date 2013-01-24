@@ -4,68 +4,68 @@
 #include <string>
 
 #include <boost/filesystem.hpp>
-#include <boost/interprocess/file_mapping.hpp>
 
-#include "Line.h"
-#include "Utf8Utils.h"
+#include "GapBuffer.h"
 
+template<class T, class BidirectionalIterator>
 class File {
-	friend class Line;
 public:
-	struct Encoding {
-		char *name;
-		int32_t confidence;
-	};
-	class Iterator {
-		friend class File;
-	public:
-		Iterator(const Iterator& that);
-		Iterator& operator =(const Iterator& that);
-		const char& operator *() const;
-		Iterator *operator ->() const;
-		Iterator& operator ++();
-		Iterator operator ++(int);
-		Iterator& operator --();
-		Iterator operator --(int);
+	File() :
+			mFileName(),
+			mFileSize(static_cast<boost::uintmax_t>(-1)),
+			mLines(1) {
+	}
 
-		const File *mFile;
-		int mLineIndex;
-		int mColumnIndex;
-		int mLineFeedIndex;
-	private:
-		Iterator(File *file);
-	};
-	File();
-	File(const char *fileName);
-	File(std::string fileName);
-	~File();
+	File(const char *fileName) :
+			mFileName(fileName),
+			mFileSize(static_cast<boost::uintmax_t>(-1)),
+			mLines() {
+	}
 
-	Iterator begin();
-	Iterator end();
+	File(std::string fileName) :
+		mFileName(fileName),
+		mFileSize(static_cast<boost::uintmax_t>(-1)),
+		mLines() {
+	}
 
-	const std::string& getFileName() const;
+	virtual ~File() = 0;
 
-	void load();
+	virtual BidirectionalIterator begin() = 0;
+	virtual BidirectionalIterator end() = 0;
 
-	int getLineCount() const;
+	virtual void load() = 0;
 
-	Line *getLine(int index) const;
+	const std::string& getFileName() const {
+		return mFileName;
+	}
 
-private:
+	int getLineCount() const {
+		return mLines.size();
+	}
+
+	T *getLine(int index) const {
+		if (mLines.size() > index) {
+			return mLines[index];
+		}
+		return NULL;
+	}
+
+	boost::uintmax_t getFileSize() const {
+		return mFileSize;
+	}
+
+protected:
 	std::string mFileName;
-	boost::uintmax_t mFileSize;
-	Line::LineFeed mFileLineFeed;
-	GapBuffer<Line *> mLines;
 	/*
-	 * Candidate charactor encoding of this file.
+	 * The value is -1 if this instance has not been load file.
 	 */
-	std::vector<Encoding> mFileEncodingCandidate;
-	Bom mBom;
-	Iterator mIteratorBegin;
-	Iterator mIteratorEnd;
+	boost::uintmax_t mFileSize;
+	GapBuffer<T *> mLines;
 };
 
-bool operator ==(const File::Iterator& x, const File::Iterator& y);
-bool operator !=(const File::Iterator& x, const File::Iterator& y);
+template<class T, class BidirectionalIterator>
+File<T, BidirectionalIterator>::~File<T, BidirectionalIterator>() {
+}
 
 #endif
+

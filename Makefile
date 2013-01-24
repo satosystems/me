@@ -39,7 +39,7 @@ else
 LIBS += -licui18n -licuuc -licuio
 endif
 
-OBJS = Main.o Exception.o File.o Line.o API.o
+OBJS = Main.o Exception.o TextFile.o TextLine.o TextFileIterator.o API.o
 
 GTEST_OBJS = out/test/gtest-all.o out/test/gtest_main.o
 

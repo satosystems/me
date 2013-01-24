@@ -1,65 +1,66 @@
+#include "TextLine.h"
+#include "TextFile.h"
 #include "Line.h"
-#include "File.h"
 
-Line::Line(std::string& str, LineFeed lineFeedCode) :
-		GapBuffer<char>(),
+TextLine::TextLine() :
+		Line(1),
+		mLineFeed(LineFeedDefault),
+		mCharCountCache(0) {
+}
+
+TextLine::TextLine(std::string& str, LineFeed lineFeedCode) :
+		Line(),
 		mLineFeed(lineFeedCode),
 		mCharCountCache(-1) {
 	const char *data = str.data();
 	insert(0, data, data + str.size());
 }
 
-Line::Line() :
-		GapBuffer<char>(1),
-		mLineFeed(LineFeedDefault),
-		mCharCountCache(0) {
-}
-
-void Line::clear() {
+void TextLine::clear() {
 	mCharCountCache = -1;
 	GapBuffer<char> *super = this;
 	super->clear();
 
 }
 
-int Line::insert(int pos, const char val) {
+int TextLine::insert(int pos, const char val) {
 	mCharCountCache = -1;
 	GapBuffer<char> *super = this;
 	return super->insert(pos, val);
 }
 
-int Line::insert(int pos, int num, const char val) {
+int TextLine::insert(int pos, int num, const char val) {
 	mCharCountCache = -1;
 	GapBuffer<char> *super = this;
 	return super->insert(pos, num, val);
 }
 
 template<class InputIterator>
-int Line::insert(int pos, InputIterator begin, InputIterator end) {
+int TextLine::insert(int pos, InputIterator begin, InputIterator end) {
 	mCharCountCache = -1;
 	GapBuffer<char> *super = this;
 	return super->insert(pos, begin, end);
 }
 
-void Line::erase(int begin, int end) {
+void TextLine::erase(int begin, int end) {
 	mCharCountCache = -1;
 	GapBuffer<char> *super = this;
 	super->erase(begin, end);
 }
 
-void Line::erase(int pos) {
+void TextLine::erase(int pos) {
 	mCharCountCache = -1;
 	GapBuffer<char> *super = this;
 	super->erase(pos);
 }
 
-void Line::push_back(const char val) {
+void TextLine::push_back(const char val) {
 	mCharCountCache = -1;
 	GapBuffer<char> *super = this;
 	super->push_back(val);
 }
 
-const char *Line::getLineFeed(const File& file) const {
+const char *TextLine::getLineFeed(const TextFile& file) const {
 	LineFeed lf = mLineFeed == LineFeedDefault ? file.mFileLineFeed : mLineFeed;
 	if (lf == LineFeedNone) {
 		return "";
@@ -86,7 +87,7 @@ const char *Line::getLineFeed(const File& file) const {
 	return LineFeedBytes[lf + offset];
 }
 
-int Line::getCharCount() {
+int TextLine::getCharCount() {
 	if (mCharCountCache != -1) {
 		return mCharCountCache;
 	}
@@ -104,7 +105,7 @@ int Line::getCharCount() {
 	return count;
 }
 
-const char *Line::LineFeedBytes[] = {
+const char *TextLine::LineFeedBytes[] = {
 	// UTF-8 and multibyte encodings
 	"\r", "\n", "\r\n",
 	// UTF-16BE
@@ -116,3 +117,4 @@ const char *Line::LineFeedBytes[] = {
 	// UTF-32LE
 	"\r\0\0\0", "\n\0\0\0", "\r\0\0\0\n\0\0\0",
 };
+

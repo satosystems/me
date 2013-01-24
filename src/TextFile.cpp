@@ -5,77 +5,74 @@
 #include <unicode/unistr.h>
 #include <unicode/ucsdet.h>
 
-#include "File.h"
+#include "TextFile.h"
+#include "TextLine.h"
 #include "Utf8Utils.h"
+#include "Logger.h"
 
 static char gUtf16BE[] = "UTF-16BE";
 static char gUtf16LE[] = "UTF-16LE";
 static char gUtf32BE[] = "UTF-32BE";
 static char gUtf32LE[] = "UTF-32LE";
 
-File::File() :
-		mFileSize(static_cast<boost::uintmax_t>(-1)),
-		mBom(BomNone),
-		mIteratorBegin(this),
-		mIteratorEnd(this) {
+TextFile::TextFile() :
+		File<TextLine, TextFileIterator>(),
+		mBom(BomNone) {
 	// TODO: read default encoding and line feed from properties file.
+	mIteratorBegin.mFile = this;
+	mIteratorEnd.mFile = this;
 }
 
-File::File(const char *fileName) :
-		mFileName(fileName),
-		mFileSize(static_cast<boost::uintmax_t>(-1)),
-		mBom(BomNone),
-		mIteratorBegin(this),
-		mIteratorEnd(this) {
+TextFile::TextFile(const char *fileName) :
+		File<TextLine, TextFileIterator>(fileName),
+		mBom(BomNone) {
 	// TODO: read default encoding and line feed from properties file.
+	mIteratorBegin.mFile = this;
+	mIteratorEnd.mFile = this;
 }
 
-File::File(std::string fileName) :
-		mFileName(fileName),
-		mFileSize(static_cast<boost::uintmax_t>(-1)),
-		mBom(BomNone),
-		mIteratorBegin(this),
-		mIteratorEnd(this) {
+TextFile::TextFile(std::string& fileName) :
+		File<TextLine, TextFileIterator>(fileName),
+		mBom(BomNone) {
 	// TODO: read default encoding and line feed from properties file.
+	mIteratorBegin.mFile = this;
+	mIteratorEnd.mFile = this;
 }
 
-File::~File() {
+TextFile::~TextFile() {
 	int headSize = mLines.head_size();
-	Line * const *head = mLines.head();
+	TextLine * const *head = mLines.head();
 	for (int i = 0; i < headSize; i++) {
-		const Line *line = head[i];
-		if (line != Line::blankLine()) {
+		const TextLine *line = head[i];
+		if (line != TextLine::blankLine()) {
 			delete line;
 		}
 	}
 	int tailSize = mLines.tail_size();
-	Line * const *tail = mLines.tail();
+	TextLine * const *tail = mLines.tail();
 	for (int i = 0; i < tailSize; i++) {
-		const Line *line = tail[i];
-		if (line != Line::blankLine()) {
+		const TextLine *line = tail[i];
+		if (line != TextLine::blankLine()) {
 			delete line;
 		}
 	}
 }
 
-File::Iterator File::begin() {
+TextFileIterator TextFile::begin() {
 	mIteratorBegin.mLineIndex = 0;
 	mIteratorBegin.mColumnIndex = 0;
 	mIteratorBegin.mLineFeedIndex = -1;
 	return mIteratorBegin;
 }
-File::Iterator File::end() {
+
+TextFileIterator TextFile::end() {
 	mIteratorBegin.mLineIndex = mLines.size();
 	mIteratorBegin.mColumnIndex = 0;
 	mIteratorBegin.mLineFeedIndex = -1;
 	return mIteratorEnd;
 }
 
-const std::string& File::getFileName() const {
-	return mFileName;
-}
-
-void File::load() {
+void TextFile::load() {
 	namespace bfs = boost::filesystem;
 	namespace bip = boost::interprocess;
 
@@ -199,147 +196,32 @@ void File::load() {
 				const char *fileEnd = ptr + size;
 				char *nextLineBegin = NULL;
 				char *lineEnd = NULL;
-				mFileLineFeed = Line::LineFeedDefault;
+				mFileLineFeed = TextLine::LineFeedDefault;
 				while (nextLineBegin != fileEnd) {
-					Line::LineFeed lf =
-						Line::searchLineFeed(lineBegin, fileEnd, encodingName, &lineEnd, &nextLineBegin);
-					if (mFileLineFeed == Line::LineFeedDefault) {
+					TextLine::LineFeed lf =
+						TextLine::searchLineFeed(lineBegin, fileEnd, encodingName, &lineEnd, &nextLineBegin);
+					if (mFileLineFeed == TextLine::LineFeedDefault) {
 						mFileLineFeed = lf;
 					}
-					Line *line;
+					TextLine *line;
 					if (lineBegin == lineEnd && lf == mFileLineFeed) {
-						line = Line::blankLine();
+						line = TextLine::blankLine();
 					} else {
 						std::string normalized = toUtf8(lineBegin, lineEnd, encodingName);
 						if (lf == mFileLineFeed) {
-							line = new Line(normalized);
+							line = new TextLine(normalized);
 						} else {
-							line = new Line(normalized, lf);
+							line = new TextLine(normalized, lf);
 						}
 					}
 					mLines.push_back(line);
+Logger::d("line:%p", line);
 					lineBegin = nextLineBegin;
 				}
-				if (mFileLineFeed == Line::LineFeedDefault) {
+				if (mFileLineFeed == TextLine::LineFeedDefault) {
 					// TODO: this file have no line feed
 				}
 			}
 		}
 	}
-}
-
-int File::getLineCount() const {
-	return mLines.size();
-}
-
-Line *File::getLine(int index) const {
-	if (mLines.size() > index) {
-		return mLines[index];
-	}
-	return NULL;
-}
-
-
-File::Iterator::Iterator(File *file) :
-		mFile(file),
-		mLineIndex(-1),
-		mColumnIndex(-1),
-		mLineFeedIndex(-1) {
-}
-
-File::Iterator::Iterator(const File::Iterator& that) :
-		mFile(that.mFile),
-		mLineIndex(that.mLineIndex),
-		mColumnIndex(that.mColumnIndex),
-		mLineFeedIndex(that.mLineFeedIndex) {
-}
-
-File::Iterator& File::Iterator::operator =(const File::Iterator& that) {
-	mFile = that.mFile;
-	mLineIndex = that.mLineIndex;
-	mColumnIndex = that.mColumnIndex;
-	mLineFeedIndex = that.mLineFeedIndex;
-	return *this;
-}
-
-const char& File::Iterator::operator *() const {
-	if (mLineIndex == mFile->mLines.size()) {
-		return *"\0";
-	}
-	Line *line = mFile->mLines[mLineIndex];
-	if (mLineFeedIndex != -1) {
-		const char *lfBytes = line->getLineFeed(*mFile);
-		assert((size_t) mLineFeedIndex < sizeof(lfBytes) - 1);
-		return lfBytes[mLineFeedIndex];
-	}
-	return (*line)[mColumnIndex];
-}
-
-File::Iterator *File::Iterator::operator ->() const {
-	return const_cast<Iterator *>(this);
-}
-
-File::Iterator& File::Iterator::operator ++() {
-	Line *line = mFile->mLines[mLineIndex];
-	if (line->size() - 1 > mColumnIndex) {
-		mColumnIndex++;
-	} else {
-		if (mFile->mLines.size() > mLineIndex) {
-			bool needChangeLine = false;
-			const char *lfBytes = line->getLineFeed(*mFile);
-			int lfBytesLen = (int) sizeof(lfBytes) - 1;
-			mLineFeedIndex++;
-			if (mLineFeedIndex == lfBytesLen) {
-				mLineFeedIndex = -1;
-				needChangeLine = true;
-			}
-			if (needChangeLine) {
-				mLineIndex++;
-				mColumnIndex = 0;
-			}
-		}
-	}
-	return *this;
-}
-
-File::Iterator File::Iterator::operator ++(int) {
-	Iterator old = *this;
-	this->operator ++();
-	return old;
-}
-
-File::Iterator& File::Iterator::operator --() {
-	if (0 < mColumnIndex) {
-		mColumnIndex--;
-	} else {
-		if (0 < mLineIndex) {
-			mLineIndex--;
-			Line *beforeLine = mFile->mLines[mLineIndex];
-			mColumnIndex = beforeLine->size() - 1;
-		}
-	}
-	return *this;
-}
-
-File::Iterator File::Iterator::operator --(int) {
-	Iterator old = *this;
-	this->operator --();
-	return old;
-}
-
-bool operator ==(const File::Iterator& x, const File::Iterator& y) {
-	if (x.mFile == y.mFile) {
-		if (x.mLineIndex == y.mLineIndex) {
-			if (x.mColumnIndex == y.mColumnIndex) {
-				if (x.mLineFeedIndex == y.mLineFeedIndex) {
-					return true;
-				}
-			}
-		}
-	}
-	return false;
-}
-
-bool operator !=(const File::Iterator& x, const File::Iterator& y) {
-	return !(x == y);
 }

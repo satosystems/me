@@ -5,18 +5,29 @@
 
 #include "File.h"
 
+template<class T>
 class Buffer {
 public:
-	Buffer(File *file) : mFile(file), x(0), y(0), column(0), lineno(0) {
+	Buffer(T *file) : mFile(file), x(0), y(0), column(0), lineno(0) {
 	}
 	~Buffer() {
 		delete mFile;
 	}
-	File *mFile;
+	T *mFile;
 	int x;
 	int y;
 	int column;
 	int lineno;
 };
 
+
+#include "TextFile.h"
+
+class TextBuffer : public Buffer<TextFile> {
+public:
+	TextBuffer(TextFile *file) : Buffer<TextFile>(file) {
+	}
+};
+
 #endif
+

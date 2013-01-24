@@ -7,7 +7,7 @@
 #include "Buffer.h"
 #include "Logger.h"
 
-extern std::vector<Buffer *> gBuffers;
+extern std::vector<TextBuffer *> gBuffers;
 
 void me_up() {
 }
@@ -21,9 +21,9 @@ void me_left() {
 }
 
 void me_right() {
-	Buffer *buffer = gBuffers[0];
+	TextBuffer *buffer = gBuffers[0];
 	Logger::d("before y:%d x:%d", buffer->y, buffer->x);
-	Line *line = buffer->mFile->getLine(buffer->lineno);
+	TextLine *line = buffer->mFile->getLine(buffer->lineno);
 	int ccount = line->getCharCount();
 	if (ccount > buffer->column) {
 		buffer->column++;

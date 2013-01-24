@@ -3,6 +3,11 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stddef.h>
+
+#include <stdint.h>
+
+#include <new>
 
 /*
  *   + head()
@@ -76,7 +81,7 @@ public:
 	template<class InputIterator>
 	int insert(int pos, InputIterator begin, InputIterator end) {
 		assert(pos <= size());
-		int len = ((intptr_t)end - (intptr_t)begin) / sizeof(T);
+		int len = ((intptr_t) end - (intptr_t) begin) / sizeof(T);
 		assert(len > 0);
 
 		moveGap(pos);

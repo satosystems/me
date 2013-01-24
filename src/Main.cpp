@@ -28,6 +28,7 @@
 #include "API.h"
 #include "Utf8Utils.h"
 #include "File.h"
+#include "TextFile.h"
 #include "Buffer.h"
 #include "Logger.h"
 
@@ -38,7 +39,7 @@ static void setSignalHandler(int signame);
 static void signalHandler(int signame);
 
 std::vector<int> gKeyBuffer;
-std::vector<Buffer *> gBuffers;
+std::vector<TextBuffer *> gBuffers; // TODO
 
 static void setSignalHandler(int signame) {
 	if (signal(signame, signalHandler) == SIG_ERR) {
@@ -86,7 +87,7 @@ static void loop() {
 
 	setSignalHandler(SIGINT);
 
-	Buffer *buffer = gBuffers[0];
+	TextBuffer *buffer = gBuffers[0];
 	buffer->mFile->load();
 	int lineCount = buffer->mFile->getLineCount();
 	for (int i = 0; i < lineCount; i++) {
@@ -177,7 +178,7 @@ static void loop() {
 //
 //		move(buffer->y, buffer->x);
 	}
-	for (std::vector<Buffer *>::iterator it = gBuffers.begin(); it != gBuffers.end(); ++it) {
+	for (std::vector<TextBuffer *>::iterator it = gBuffers.begin(); it != gBuffers.end(); ++it) {
 		delete *it;
 	}
 	gBuffers.clear();
@@ -221,11 +222,11 @@ static void parseOption(int argc, char *argv[]) {
 		if (params.count("input-file")) {
 			InputFiles files(params["input-file"].as<InputFiles>());
 			for (InputFiles::iterator it = files.begin(); it != files.end(); ++it) {
-				Buffer *buffer = new Buffer(new File(*it));
+				TextBuffer *buffer = new TextBuffer(new TextFile(*it));
 				gBuffers.push_back(buffer);
 			}
 		} else {
-			Buffer *buffer = new Buffer(new File);
+			TextBuffer *buffer = new TextBuffer(new TextFile);
 			gBuffers.push_back(buffer);
 		}
 	} catch (const std::exception& error) {
