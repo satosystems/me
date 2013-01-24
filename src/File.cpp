@@ -39,20 +39,6 @@ File::File(std::string fileName) :
 	// TODO: read default encoding and line feed from properties file.
 }
 
-#if 0
-// TODO: I don't know this method is usable or not.
-File::File(const File& that) :
-		mFileName(that.mFileName),
-		mFileSize(that.mFileSize),
-		mFileLineFeed(that.mFileLineFeed),
-		mLines(that.mLines),
-		mFileEncodingCandidate(that.mFileEncodingCandidate),
-		mWithBOM(that.mWithBOM),
-		mIteratorBegin(that.mIteratorBegin),
-		mIteratorEnd(that.mIteratorEnd) {
-}
-#endif
-
 File::~File() {
 	int headSize = mLines.head_size();
 	Line * const *head = mLines.head();
@@ -254,21 +240,6 @@ Line *File::getLine(int index) const {
 }
 
 
-#if 0
-// TODO: I don't know this method is usable or not.
-File& File::operator =(const File& that) {
-	mFileName = that.mFileName;
-	mFileSize = that.mFileSize;
-	mFileLineFeed = that.mFileLineFeed;
-	mLines = that.mLines;
-	mFileEncodingCandidate = that.mFileEncodingCandidate;
-	mWithBOM = that.mWithBOM;
-	mIteratorBegin = that.mIteratorBegin;
-	mIteratorEnd = that.mIteratorEnd;
-	return *this;
-}
-#endif
-
 File::Iterator::Iterator(File *file) :
 		mFile(file),
 		mLineIndex(-1),
@@ -355,17 +326,6 @@ File::Iterator File::Iterator::operator --(int) {
 	this->operator --();
 	return old;
 }
-
-#if 0
-// TODO: I don't know this method is usable or not.
-bool operator ==(const File& x, const File& y) {
-	return x.getFileName() == y.getFileName();
-}
-
-bool operator !=(const File& x, const File& y) {
-	return !(x == y);
-}
-#endif
 
 bool operator ==(const File::Iterator& x, const File::Iterator& y) {
 	if (x.mFile == y.mFile) {

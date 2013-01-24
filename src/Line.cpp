@@ -9,22 +9,6 @@ Line::Line(std::string& str, LineFeed lineFeedCode) :
 	insert(0, data, data + str.size());
 }
 
-#if 0
-// TODO: I don't know this method is usable or not.
-Line::Line(Line& that) :
-		GapBuffer<char>(that.GAP_GROWTH_SIZE),
-		mLineFeed(that.mLineFeed) {
-	mCapacity = that.mCapacity;
-	mGapBegin = that.mGapBegin;
-	mGapEnd = that.mGapEnd;
-	mBuffer = (char *) realloc(mBuffer, mCapacity);
-	if (mBuffer == NULL) {
-		throw std::bad_alloc();
-	}
-	memcpy(mBuffer, that.mBuffer, mCapacity);
-}
-#endif
-
 Line::Line() :
 		GapBuffer<char>(1),
 		mLineFeed(LineFeedDefault),
@@ -119,14 +103,6 @@ int Line::getCharCount() {
 	mCharCountCache = count;
 	return count;
 }
-
-#if 0
-// TODO: I don't know this method is usable or not.
-Line& Line::operator =(const Line& that) {
-	mLineFeed = that.mLineFeed;
-	return *this;
-}
-#endif
 
 const char *Line::LineFeedBytes[] = {
 	// UTF-8 and multibyte encodings

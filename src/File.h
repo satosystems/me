@@ -38,10 +38,6 @@ public:
 	File();
 	File(const char *fileName);
 	File(std::string fileName);
-#if 0
-// TODO: I don't know this method is usable or not.
-	File(const File& that);
-#endif
 	~File();
 
 	Iterator begin();
@@ -54,11 +50,6 @@ public:
 	int getLineCount() const;
 
 	Line *getLine(int index) const;
-
-#if 0
-// TODO: I don't know this method is usable or not.
-	File& operator =(const File& that);
-#endif
 
 private:
 	std::string mFileName;
@@ -73,12 +64,6 @@ private:
 	Iterator mIteratorBegin;
 	Iterator mIteratorEnd;
 };
-
-#if 0
-// TODO: I don't know this method is usable or not.
-bool operator ==(const File& x, const File& y);
-bool operator !=(const File& x, const File& y);
-#endif
 
 bool operator ==(const File::Iterator& x, const File::Iterator& y);
 bool operator !=(const File::Iterator& x, const File::Iterator& y);

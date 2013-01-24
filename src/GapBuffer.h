@@ -237,47 +237,6 @@ public:
 		return mGapEnd == mCapacity ? NULL : mBuffer + mGapEnd;
 	}
 
-#if 0
-// TODO: I don't know this method is usable or not.
-	GapBuffer<T>& operator =(const GapBuffer<T>& that) {
-		mCapacity = that.mCapacity;
-		mGapBegin = that.mGapBegin;
-		mGapEnd = that.mGapEnd;
-		mBuffer = (T *) malloc(mCapacity * sizeof(T));
-		memcpy(mBuffer, that.mBuffer, mCapacity * sizeof(T));
-		return *this;
-	}
-#endif
-
-#if 0
-// TODO: I don't know this method is usable or not.
-	/*
-	 * This function allocate memory and copy contents to allocated memory block.
-	 * You must delete [] when after using copy array.
-	 */
-	int copy(T **array) const {
-		int len = size();
-		if (len == 0) {
-			*array = NULL;
-			return 0;
-		}
-		*array = new T[len];
-		if (*array == NULL) {
-			throw std::bad_alloc();
-		}
-		int gapSize = mGapEnd - mGapBegin;
-		if (gapSize == 0) {
-			memcpy(*array, mBuffer, mCapacity * sizeof(T));
-		} else {
-			memcpy(*array, mBuffer, mGapBegin * sizeof(T));
-			if (mGapEnd != mCapacity) {
-				memcpy(*array + mGapBegin, mBuffer + mGapBegin + gapSize, (mCapacity - mGapEnd) * sizeof(T));
-			}
-		}
-		return len;
-	}
-#endif
-
 protected:
 	const int GAP_GROWTH_SIZE;
 	int mCapacity, mGapBegin, mGapEnd;

@@ -24,11 +24,6 @@ public:
 
 	Line(std::string& str, LineFeed lineFeedCode = LineFeedDefault);
 
-#if 0
-// TODO: I don't know this method is usable or not.
-	Line(Line& that);
-#endif
-
 	static Line *blankLine() {
 		static Line line;
 		return &line;
@@ -151,11 +146,6 @@ public:
 
 	int getCharCount();
 
-#if 0
-// TODO: I don't know this method is usable or not.
-	Line& operator =(const Line& that);
-#endif
-
 private:
 	LineFeed mLineFeed;
 	int mCharCountCache;
@@ -167,4 +157,3 @@ private:
 };
 
 #endif
-
