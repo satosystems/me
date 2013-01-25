@@ -7,7 +7,7 @@
 
 class TextFile;
 
-class TextLine : public Line {
+class TextLine : public Line<TextFile> {
 public:
 	enum LineFeed {
 		LineFeedDefault = -1,
@@ -19,7 +19,7 @@ public:
 
 	static const char *LineFeedBytes[];
 
-	TextLine(std::string& str, LineFeed lineFeedCode = LineFeedDefault);
+	TextLine(TextFile *file, std::string& str, LineFeed lineFeedCode = LineFeedDefault);
 
 	static TextLine *blankLine() {
 		static TextLine line;
@@ -141,7 +141,7 @@ public:
 
 	void push_back(const char val);
 
-	const char *getLineFeed(const TextFile& file) const;
+	const char *getLineFeed() const;
 
 	int getCharCount();
 

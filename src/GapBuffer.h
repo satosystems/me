@@ -31,11 +31,13 @@ template<class T>
 class GapBuffer {
 public:
 	explicit GapBuffer(int capacity = 64) :
-			GAP_GROWTH_SIZE(capacity),
-			mCapacity(capacity), mGapBegin(0), mGapEnd(capacity),
-			mBuffer((T *) malloc(capacity * sizeof(T))) {
-		assert(capacity >= 1);
-		if (mBuffer == NULL) {
+			kGapGrowthSize(capacity),
+			mCapacity(capacity),
+			mGapBegin(0),
+			mGapEnd(capacity),
+			mBuffer(capacity ? (T *) malloc(capacity * sizeof(T)) : NULL) {
+		assert(capacity >= 0);
+		if (capacity > 0 && mBuffer == NULL) {
 			throw std::bad_alloc();
 		}
 	}
@@ -69,7 +71,7 @@ public:
 		assert(num > 0);
 		moveGap(pos);
 		if (mGapEnd - mGapBegin < num) {
-			appendGap(GAP_GROWTH_SIZE + num);
+			appendGap(kGapGrowthSize + num);
 		}
 		for (int i = 0; i < num; i++) {
 			mBuffer[mGapBegin++] = val;
@@ -86,7 +88,7 @@ public:
 
 		moveGap(pos);
 		if (mGapEnd - mGapBegin <= len) {
-			appendGap(GAP_GROWTH_SIZE + len);
+			appendGap(kGapGrowthSize + len);
 		}
 		while (begin != end) {
 			mBuffer[mGapBegin++] = *begin++;
@@ -190,7 +192,7 @@ public:
 	void push_back(const T& val) {
 		if (mCapacity == mGapBegin) {
 			assert(mCapacity == mGapEnd);
-			appendGap(GAP_GROWTH_SIZE + 1);
+			appendGap(kGapGrowthSize + 1);
 		}
 		if (mCapacity != mGapEnd) {
 			int gapSize = mGapEnd - mGapBegin;
@@ -243,8 +245,10 @@ public:
 	}
 
 protected:
-	const int GAP_GROWTH_SIZE;
-	int mCapacity, mGapBegin, mGapEnd;
+	const int kGapGrowthSize;
+	int mCapacity;
+	int mGapBegin;
+	int mGapEnd;
 	T *mBuffer;
 
 	/**
@@ -336,7 +340,7 @@ protected:
 
 	void appendGap(int size) {
 // it commented out that mean silence compiler warning
-//		assert(size >= GAP_GROWTH_SIZE);
+//		assert(size >= kGapGrowthSize);
 		assert(mGapEnd >= mGapBegin && mGapEnd <= mCapacity);
 		T *newBuffer = (T *) realloc(mBuffer, (mCapacity + size) * sizeof(T));
 		if (newBuffer == NULL) {
@@ -356,4 +360,3 @@ protected:
 };
 
 #endif
-

@@ -209,13 +209,12 @@ void TextFile::load() {
 					} else {
 						std::string normalized = toUtf8(lineBegin, lineEnd, encodingName);
 						if (lf == mFileLineFeed) {
-							line = new TextLine(normalized);
+							line = new TextLine(this, normalized);
 						} else {
-							line = new TextLine(normalized, lf);
+							line = new TextLine(this, normalized, lf);
 						}
 					}
 					mLines.push_back(line);
-Logger::d("line:%p", line);
 					lineBegin = nextLineBegin;
 				}
 				if (mFileLineFeed == TextLine::LineFeedDefault) {

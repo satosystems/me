@@ -91,7 +91,7 @@ static void loop() {
 	buffer->mFile->load();
 	int lineCount = buffer->mFile->getLineCount();
 	for (int i = 0; i < lineCount; i++) {
-		Line *line = buffer->mFile->getLine(i);
+		TextLine *line = buffer->mFile->getLine(i);
 		addnstr(line->head(), line->head_size());
 		addnstr(line->tail(), line->tail_size());
 		getyx(stdscr, buffer->y, buffer->x);

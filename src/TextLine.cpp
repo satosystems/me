@@ -3,13 +3,13 @@
 #include "Line.h"
 
 TextLine::TextLine() :
-		Line(1),
+		Line(NULL, 0),
 		mLineFeed(LineFeedDefault),
 		mCharCountCache(0) {
 }
 
-TextLine::TextLine(std::string& str, LineFeed lineFeedCode) :
-		Line(),
+TextLine::TextLine(TextFile *file, std::string& str, LineFeed lineFeedCode) :
+		Line(file),
 		mLineFeed(lineFeedCode),
 		mCharCountCache(-1) {
 	const char *data = str.data();
@@ -20,7 +20,6 @@ void TextLine::clear() {
 	mCharCountCache = -1;
 	GapBuffer<char> *super = this;
 	super->clear();
-
 }
 
 int TextLine::insert(int pos, const char val) {
@@ -60,12 +59,12 @@ void TextLine::push_back(const char val) {
 	super->push_back(val);
 }
 
-const char *TextLine::getLineFeed(const TextFile& file) const {
-	LineFeed lf = mLineFeed == LineFeedDefault ? file.mFileLineFeed : mLineFeed;
+const char *TextLine::getLineFeed() const {
+	LineFeed lf = mLineFeed == LineFeedDefault ? mFile->mFileLineFeed : mLineFeed;
 	if (lf == LineFeedNone) {
 		return "";
 	}
-	const char *encodingName = file.mFileEncodingCandidate[0].name;
+	const char *encodingName = mFile->mFileEncodingCandidate[0].name;
 	int offset = 0;
 	if (strstr(encodingName, "UTF-16") == encodingName) {
 		if (strstr(encodingName, "BE") != NULL) {
@@ -117,4 +116,3 @@ const char *TextLine::LineFeedBytes[] = {
 	// UTF-32LE
 	"\r\0\0\0", "\n\0\0\0", "\r\0\0\0\n\0\0\0",
 };
-

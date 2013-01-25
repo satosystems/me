@@ -5,11 +5,15 @@
 
 #include "GapBuffer.h"
 
+template<class T>
 class Line : public GapBuffer<char> {
 public:
-	Line(int capacity = 64) :
-			GapBuffer<char>(capacity) {
+	Line(T *file, int capacity = 64) :
+			GapBuffer<char>(capacity),
+			mFile(file) {
 	}
+protected:
+	T *mFile;
 };
 
 #endif

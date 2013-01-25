@@ -35,7 +35,7 @@ const char& TextFileIterator::operator *() const {
 	}
 	TextLine *line = mFile->mLines[mLineIndex];
 	if (mLineFeedIndex != -1) {
-		const char *lfBytes = line->getLineFeed(*mFile);
+		const char *lfBytes = line->getLineFeed();
 		assert((size_t) mLineFeedIndex < sizeof(lfBytes) - 1);
 		return lfBytes[mLineFeedIndex];
 	}
@@ -53,7 +53,7 @@ TextFileIterator& TextFileIterator::operator ++() {
 	} else {
 		if (mFile->mLines.size() > mLineIndex) {
 			bool needChangeLine = false;
-			const char *lfBytes = line->getLineFeed(*mFile);
+			const char *lfBytes = line->getLineFeed();
 			int lfBytesLen = (int) sizeof(lfBytes) - 1;
 			mLineFeedIndex++;
 			if (mLineFeedIndex == lfBytesLen) {
