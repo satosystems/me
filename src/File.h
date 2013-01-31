@@ -55,6 +55,10 @@ public:
 	}
 
 protected:
+	/*
+	 * Name of this file.
+	 * It is new created file if file name is empty.
+	 */
 	std::string mFileName;
 	/*
 	 * The value is -1 if this instance has not been load file.
