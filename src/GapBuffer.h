@@ -244,6 +244,21 @@ public:
 		return mGapEnd == mCapacity ? NULL : mBuffer + mGapEnd;
 	}
 
+	int find(const T* search, int offset, int length) {
+		int len = size() - length;
+		for (int i = offset; i < len; i++) {
+			for (int j = 0; j < length; j++) {
+				if ((*this)[i + j] != search[j]) {
+					break;
+				}
+				if (j == length - 1) {
+					return i;
+				}
+			}
+		}
+		return -1;
+	}
+
 protected:
 	const int kGapGrowthSize;
 	int mCapacity;

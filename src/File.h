@@ -22,7 +22,7 @@ public:
 			mLines() {
 	}
 
-	File(std::string fileName) :
+	File(const std::string fileName) :
 		mFileName(fileName),
 		mFileSize(static_cast<boost::uintmax_t>(-1)),
 		mLines() {
@@ -34,6 +34,8 @@ public:
 	virtual BidirectionalIterator end() = 0;
 
 	virtual void load() = 0;
+
+	virtual void save() = 0;
 
 	const std::string& getFileName() const {
 		return mFileName;
@@ -50,6 +52,12 @@ public:
 		return NULL;
 	}
 
+	T *addLine() {
+		T *newLine = new T(this);
+		mLines.push_back(newLine);
+		return newLine;
+	}
+
 	boost::uintmax_t getFileSize() const {
 		return mFileSize;
 	}
@@ -59,7 +67,7 @@ protected:
 	 * Name of this file.
 	 * It is new created file if file name is empty.
 	 */
-	std::string mFileName;
+	const std::string mFileName;
 	/*
 	 * The value is -1 if this instance has not been load file.
 	 */

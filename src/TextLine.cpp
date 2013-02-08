@@ -1,15 +1,36 @@
 #include "TextLine.h"
 #include "TextFile.h"
 #include "Line.h"
+#include "Logger.h"
 
 TextLine::TextLine() :
-		Line(NULL, 0),
-		mLineFeed(LineFeedDefault),
+		Line<TextFile>(NULL, 0),
+		mLineFeed(LineFeedNone),
 		mCharCountCache(0) {
 }
 
+TextLine::TextLine(File<TextLine, TextFileIterator> *file) :
+		Line<TextFile>(dynamic_cast<TextFile *>(file)),
+		mLineFeed(dynamic_cast<TextFile *>(file)->mFileLineFeed),
+		mCharCountCache(-1) {
+}
+
+TextLine::TextLine(TextFile *file) :
+		Line<TextFile>(file),
+		mLineFeed(file->mFileLineFeed),
+		mCharCountCache(-1) {
+}
+
+TextLine::TextLine(TextFile *file, std::string& str) :
+		Line<TextFile>(file),
+		mLineFeed(file->mFileLineFeed),
+		mCharCountCache(-1) {
+	const char *data = str.data();
+	insert(0, data, data + str.size());
+}
+
 TextLine::TextLine(TextFile *file, std::string& str, LineFeed lineFeedCode) :
-		Line(file),
+		Line<TextFile>(file),
 		mLineFeed(lineFeedCode),
 		mCharCountCache(-1) {
 	const char *data = str.data();
@@ -60,11 +81,21 @@ void TextLine::push_back(const char val) {
 }
 
 const char *TextLine::getLineFeed() const {
-	LineFeed lf = mLineFeed == LineFeedDefault ? mFile->mFileLineFeed : mLineFeed;
-	if (lf == LineFeedNone) {
-		return "";
+	Logger::d("mLineFeed:%s", mLineFeed == LineFeedNone ?
+			"LineFeedNone" : mLineFeed  == LineFeedCR ?
+			"LineFeedCR" : mLineFeed  == LineFeedLF ?
+			"LineFeedLF" : mLineFeed  == LineFeedCRLF ?
+			"LineFeedCRLF" : "ERROR!!!");
+	if (mLineFeed == LineFeedNone) {
+		return NULL;
 	}
-	const char *encodingName = mFile->mFileEncodingCandidate[0].name;
+
+	const char *encodingName;
+	if (mFile->mFileEncodingCandidate.size() == 0) {
+		encodingName = "UTF-8";
+	} else {
+		encodingName = mFile->mFileEncodingCandidate[0].name;
+	}
 	int offset = 0;
 	if (strstr(encodingName, "UTF-16") == encodingName) {
 		if (strstr(encodingName, "BE") != NULL) {
@@ -83,7 +114,7 @@ const char *TextLine::getLineFeed() const {
 			// TODO: need detect endian of file
 		}
 	}
-	return LineFeedBytes[lf + offset];
+	return LineFeedBytes[mLineFeed + offset];
 }
 
 int TextLine::getCharCount() {

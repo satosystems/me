@@ -4,13 +4,13 @@
 #include "Line.h"
 #include "GapBuffer.h"
 #include "File.h"
+#include "TextFileIterator.h"
 
 class TextFile;
 
 class TextLine : public Line<TextFile> {
 public:
 	enum LineFeed {
-		LineFeedDefault = -1,
 		LineFeedCR = 0,
 		LineFeedLF = 1,
 		LineFeedCRLF = 2,
@@ -19,7 +19,13 @@ public:
 
 	static const char *LineFeedBytes[];
 
-	TextLine(TextFile *file, std::string& str, LineFeed lineFeedCode = LineFeedDefault);
+	TextLine(File<TextLine, TextFileIterator> *file);
+
+	TextLine(TextFile *file);
+
+	TextLine(TextFile *file, std::string& str);
+
+	TextLine(TextFile *file, std::string& str, LineFeed lineFeedCode);
 
 	static TextLine *blankLine() {
 		static TextLine line;

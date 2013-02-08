@@ -30,10 +30,12 @@
 #include "File.h"
 #include "TextFile.h"
 #include "Buffer.h"
+#include "Settings.h"
 #include "Logger.h"
 
 #define CTRL_X 0x18
-#define KEY_ESC 0x1b
+#define K_ESC 0x1b
+#define K_ENTER 0x0d
 
 static void setSignalHandler(int signame);
 static void signalHandler(int signame);
@@ -83,6 +85,8 @@ int me_addstr(const char *utf8str) {
 static void loop() {
 	int ch;
 	std::string mbcbuf;
+	std::string cmdbuf;
+	bool cmdmode = false;
 	int mbcl = 0; // multi byte char length
 
 	setSignalHandler(SIGINT);
@@ -125,13 +129,41 @@ static void loop() {
 //				buffer->y += 1;
 //				gKeyBuffer.clear();
 				break;
-			case KEY_ESC:
-				if (gKeyBuffer.size() == 1 && gKeyBuffer.back() == KEY_ESC) {
+			case K_ESC:
+				if (gKeyBuffer.size() == 1 && gKeyBuffer.back() == K_ESC) {
 					gKeyBuffer.clear();
 					mvaddstr(LINES - 1, 0, ":");
 					getyx(stdscr, buffer->y, buffer->x);
+					cmdmode = true;
+					cmdbuf.clear();
+					Logger::d("cmdmode:on");
 				} else {
 					gKeyBuffer.push_back(ch);
+					cmdmode = false;
+					Logger::d("cmdmode:off");
+				}
+				break;
+			case K_ENTER:
+				if (cmdmode) {
+					Logger::d("command:%s", cmdbuf.c_str());
+					if (cmdbuf == Settings::settingKey_defaultEncoding) {
+						Logger::d("%s:%s", Settings::settingKey_defaultEncoding, gSettings->getDefaultEncoding().c_str());
+					} else if (cmdbuf == Settings::settingKey_defaultLineFeed) {
+						TextLine::LineFeed lf = gSettings->getDefaultLineFeed();
+						const char *lfStr;
+						if (lf == TextLine::LineFeedCRLF) {
+							lfStr = "CRLF";
+						} else if (lf == TextLine::LineFeedCR) {
+							lfStr = "CRLF";
+						} else if (lf == TextLine::LineFeedLF) {
+							lfStr = "LF";
+						} else {
+							lfStr = "ERROR!!!!!";
+						}
+						Logger::d("%s:%s", Settings::settingKey_defaultLineFeed, lfStr);
+					}
+					Logger::d("cmdmode:finish");
+					cmdmode = false;
 				}
 				break;
 			default:
@@ -162,6 +194,9 @@ static void loop() {
 					Logger::d("width:%d", width);
 				}
 				buffer->x += width;
+				if (cmdmode) {
+					cmdbuf += mbcbuf;
+				}
 				mbcbuf.clear();
 			}
 		}
@@ -236,9 +271,16 @@ static void parseOption(int argc, char *argv[]) {
 	}
 }
 
+static void init() {
+	if (Settings::init() != Settings::SUCCESS) {
+		exit(EXIT_FAILURE);
+	}
+}
+
 int main(int argc, char *argv[]) {
 	setlocale(LC_ALL, "");
 	parseOption(argc, argv);
+	init();
 
 	initscr();
 	cbreak();

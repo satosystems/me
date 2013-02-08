@@ -5,36 +5,35 @@
 #include <unicode/unistr.h>
 #include <unicode/ucsdet.h>
 
+#include <iostream>
+#include <fstream>
+
 #include "TextFile.h"
 #include "TextLine.h"
 #include "Utf8Utils.h"
+#include "Settings.h"
 #include "Logger.h"
-
-static char gUtf16BE[] = "UTF-16BE";
-static char gUtf16LE[] = "UTF-16LE";
-static char gUtf32BE[] = "UTF-32BE";
-static char gUtf32LE[] = "UTF-32LE";
 
 TextFile::TextFile() :
 		File<TextLine, TextFileIterator>(),
+		mFileLineFeed(gSettings->getDefaultLineFeed()),
 		mBom(BomNone) {
-	// TODO: read default encoding and line feed from properties file.
 	mIteratorBegin.mFile = this;
 	mIteratorEnd.mFile = this;
 }
 
 TextFile::TextFile(const char *fileName) :
 		File<TextLine, TextFileIterator>(fileName),
+		mFileLineFeed(gSettings->getDefaultLineFeed()),
 		mBom(BomNone) {
-	// TODO: read default encoding and line feed from properties file.
 	mIteratorBegin.mFile = this;
 	mIteratorEnd.mFile = this;
 }
 
-TextFile::TextFile(std::string& fileName) :
+TextFile::TextFile(const std::string& fileName) :
 		File<TextLine, TextFileIterator>(fileName),
+		mFileLineFeed(gSettings->getDefaultLineFeed()),
 		mBom(BomNone) {
-	// TODO: read default encoding and line feed from properties file.
 	mIteratorBegin.mFile = this;
 	mIteratorEnd.mFile = this;
 }
@@ -73,6 +72,7 @@ TextFileIterator TextFile::end() {
 }
 
 void TextFile::load() {
+	Logger::d("load:[%s]", mFileName.c_str());
 	namespace bfs = boost::filesystem;
 	namespace bip = boost::interprocess;
 
@@ -81,9 +81,11 @@ void TextFile::load() {
 	}
 	const bfs::path path(mFileName);
 	boost::system::error_code ec;
-	const bfs::file_status fs = bfs::status(path, ec);
+	const bfs::file_status fs(bfs::status(path, ec));
 	if (fs.type() == bfs::regular_file || fs.type() == bfs::symlink_file) {
 		const boost::uintmax_t fileSize = bfs::file_size(path, ec);
+		Logger::d("ec:%s", ec ? "error" : "success");
+		Logger::d("fileSize:%zd", fileSize);
 		if (fileSize != static_cast<boost::uintmax_t>(-1) && !ec) {
 			mFileSize = fileSize;
 
@@ -113,7 +115,7 @@ void TextFile::load() {
 			for (int i = 0; i < matchesFound; i++) {
 				Encoding encoding;
 				errorCode = U_ZERO_ERROR;
-				encoding.name = const_cast<char *>(ucsdet_getName(ucsm[i], &errorCode));
+				encoding.name = ucsdet_getName(ucsm[i], &errorCode);
 				if (U_FAILURE(errorCode)) {
 					// TODO: error recovery
 				}
@@ -128,8 +130,8 @@ void TextFile::load() {
 
 			char *lineBegin = const_cast<char *>(ptr);
 			// BOM and byte order check
-			char *encodingName = mFileEncodingCandidate[0].name;
-			char **encodingRename = &mFileEncodingCandidate[0].name;
+			const char *encodingName = mFileEncodingCandidate[0].name;
+			const char **encodingRename = &mFileEncodingCandidate[0].name;
 			if (size >= 2 && strstr(encodingName, "UTF-16") == encodingName) {
 				assert(fileSize % 2 == 0);
 				if (lineBegin[0] == 0xFE && lineBegin[1] == 0xFF) {
@@ -144,12 +146,12 @@ void TextFile::load() {
 					for (boost::uintmax_t i = 0; i < fileSize; i += 2) {
 						if (lineBegin[i] == 0x00 && lineBegin[i + 1] != 0x00) {
 							mBom = BomBE;
-							*encodingRename = gUtf16BE;
+							*encodingRename = "UTF-16BE";
 							break;
 						}
 						if (lineBegin[i] != 0x00 && lineBegin[i + 1] == 0x00) {
 							mBom = BomLE;
-							*encodingRename = gUtf16LE;
+							*encodingRename = "UTF-16LE";
 							break;
 						}
 					}
@@ -176,13 +178,13 @@ void TextFile::load() {
 						if (lineBegin[i] == 0x00 && lineBegin[i + 1] == 0x00 &&
 								lineBegin[i + 2] != 0x00 && lineBegin[i + 3] != 0x00) {
 							mBom = BomBE;
-							*encodingRename = gUtf32BE;
+							*encodingRename = "UTF-32BE";
 							break;
 						}
 						if (lineBegin[i] != 0x00 && lineBegin[i + 1] != 0x00 &&
 								lineBegin[i + 2] == 0x00 && lineBegin[i + 3] == 0x00) {
 							mBom = BomLE;
-							*encodingRename = gUtf32LE;
+							*encodingRename = "UTF-32LE";
 							break;
 						}
 					}
@@ -192,11 +194,11 @@ void TextFile::load() {
 			const char *fileEnd = ptr + size;
 			char *nextLineBegin = NULL;
 			char *lineEnd = NULL;
-			mFileLineFeed = TextLine::LineFeedDefault;
-			while (nextLineBegin != fileEnd) {
+			mFileLineFeed = TextLine::LineFeedNone;
+			while (nextLineBegin != fileEnd || lineEnd == fileEnd) {
 				TextLine::LineFeed lf =
 					TextLine::searchLineFeed(lineBegin, fileEnd, encodingName, &lineEnd, &nextLineBegin);
-				if (mFileLineFeed == TextLine::LineFeedDefault) {
+				if (mFileLineFeed == TextLine::LineFeedNone) {
 					mFileLineFeed = lf;
 				}
 				TextLine *line;
@@ -204,21 +206,37 @@ void TextFile::load() {
 					line = TextLine::blankLine();
 				} else {
 					std::string normalized = toUtf8(lineBegin, lineEnd, encodingName);
-					if (lf == mFileLineFeed) {
-						line = new TextLine(this, normalized);
-					} else {
-						line = new TextLine(this, normalized, lf);
-					}
+					line = new TextLine(this, normalized, lf);
 				}
 				mLines.push_back(line);
 				lineBegin = nextLineBegin;
 			}
-			if (mFileLineFeed == TextLine::LineFeedDefault) {
-				// TODO: this file have no line feed
-				// Current implementation always decide LF,
-				// but in feature, user can decide via settings file.
-				mFileLineFeed = TextLine::LineFeedLF;
+			if (mFileLineFeed == TextLine::LineFeedNone) {
+				mFileLineFeed = gSettings->getDefaultLineFeed();
 			}
 		}
 	}
+}
+
+void TextFile::save() {
+	std::ofstream ofs(mFileName.c_str());
+	for (int i = 0; i < mLines.size(); i++) {
+		// TODO: convert file encoding
+		int size;
+		size = mLines[i]->head_size();
+		if (size > 0) {
+			ofs.write((char *) mLines[i]->head(), size);
+		}
+		size = mLines[i]->tail_size();
+		if (size > 0) {
+			ofs.write((char *) mLines[i]->tail(), size);
+		}
+		const char *lineEnd = mLines[i]->getLineFeed();
+		if (lineEnd != NULL) {
+			size = sizeof(lineEnd);
+			Logger::d("lineEndSize:%d", size);
+			ofs.write(lineEnd, size);
+		}
+	}
+	ofs.close();
 }

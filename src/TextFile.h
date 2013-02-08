@@ -14,20 +14,22 @@
 class TextFile : public File<TextLine, TextFileIterator> {
 	friend class TextLine;
 	friend class TextFileIterator;
+	friend class Settings;
 public:
 	struct Encoding {
-		char *name;
+		const char *name;
 		int32_t confidence;
 	};
 	TextFile();
 	TextFile(const char *fileName);
-	TextFile(std::string& fileName);
+	TextFile(const std::string& fileName);
 	~TextFile();
 
 	TextFileIterator begin();
 	TextFileIterator end();
 
 	void load();
+	void save();
 
 private:
 	TextFileIterator mIteratorBegin;
