@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#include <fstream>
+
 #include <boost/filesystem.hpp>
 
 #include "TextFile.h"
